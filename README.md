@@ -5,7 +5,7 @@ A free, play-based math diagnostic for children aged roughly 3 to 5, mapped to t
 
 Runs in any browser. Designed for iPad. No install, no account, no data leaves the device.
 
-**▶️ [Play it here](https://brwang04-MAML.github.io/storm-chaser/)**
+**▶️ [Play it here](https://brwang04-maml.github.io/storm-chaser/)**
 
 ---
 
