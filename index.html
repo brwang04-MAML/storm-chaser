@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Storm Chaser">
+<meta name="theme-color" content="#3aa6e0">
+<meta name="description" content="A play-based math check for 3-5 year olds, mapped to the California Preschool/Transitional Kindergarten Learning Foundations.">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
+<title>Storm Chaser — Math Check</title>
+<style>
+  :root{
+    --sky:#3aa6e0; --sky2:#8fd4f5; --storm:#4a5568; --road:#3b4252;
+    --ink:#1a202c; --paper:#fffdf7; --line:#dfe3ea;
+    --go:#2fb344; --sun:#ffc93c; --hot:#ff6b4a; --grape:#7c5cd6;
+    --tap:#0f7fd4;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; height:100%; overflow:hidden;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;
+    background:linear-gradient(180deg,var(--sky2) 0%, var(--sky) 55%, #2a7fb5 100%);
+    color:var(--ink); user-select:none; -webkit-user-select:none;
+    touch-action:manipulation;
+  }
+  #app{height:100%; display:flex; flex-direction:column; padding:16px; max-width:1100px; margin:0 auto;}
+
+  .topbar{display:flex; align-items:center; gap:12px; min-height:44px;}
+  .pill{background:rgba(255,255,255,.85); border-radius:999px; padding:6px 16px; font-weight:800; font-size:15px; color:var(--storm);}
+  .spacer{flex:1;}
+  .iconbtn{background:rgba(255,255,255,.85); border:0; border-radius:999px; width:44px; height:44px; font-size:20px; cursor:pointer;}
+
+  .stage{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; min-height:0;}
+
+  h1{font-size:clamp(30px,6vw,54px); margin:0; text-align:center; color:#fff; text-shadow:0 3px 0 rgba(0,0,0,.18);}
+  .prompt{
+    font-size:clamp(22px,4.2vw,34px); font-weight:800; text-align:center; color:#fff;
+    text-shadow:0 2px 0 rgba(0,0,0,.2); line-height:1.25; max-width:900px;
+  }
+  .sub{font-size:16px; color:rgba(255,255,255,.9); text-align:center; max-width:700px; line-height:1.4;}
+
+  .grownup{
+    background:var(--paper); border:3px dashed var(--grape); border-radius:18px;
+    padding:14px 18px; max-width:760px; text-align:center;
+  }
+  .grownup .tag{font-size:12px; font-weight:900; letter-spacing:.1em; color:var(--grape); text-transform:uppercase;}
+  .grownup .say{font-size:20px; font-weight:700; margin-top:6px; line-height:1.35;}
+  .grownup .why{font-size:14px; color:#667; margin-top:8px; line-height:1.4;}
+
+  .playfield{
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+    gap:14px; max-width:960px;
+  }
+  .card{
+    background:var(--paper); border-radius:20px; border:4px solid transparent;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; box-shadow:0 5px 0 rgba(0,0,0,.15);
+    transition:transform .1s ease, border-color .1s ease, opacity .2s ease;
+  }
+  .card:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.15);}
+  .card.sel{border-color:var(--tap); transform:translateY(-4px);}
+  .card.done{opacity:.35; pointer-events:none;}
+  .card.num{width:104px; height:120px; font-size:56px; font-weight:900; color:var(--ink);}
+  .card.wide{min-width:150px; min-height:120px; padding:10px 16px; font-size:30px; font-weight:900;}
+  .card.obj{width:120px; height:104px;}
+  .card.tall{width:150px; height:150px;}
+
+  .btnrow{display:flex; flex-wrap:wrap; gap:12px; justify-content:center;}
+  .btn{
+    background:var(--go); color:#fff; border:0; border-radius:999px;
+    padding:16px 34px; font-size:20px; font-weight:900; cursor:pointer;
+    box-shadow:0 5px 0 rgba(0,0,0,.2); font-family:inherit;
+  }
+  .btn:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.2);}
+  .btn.alt{background:#fff; color:var(--storm);}
+  .btn.purple{background:var(--grape);}
+  .btn.ghost{background:rgba(255,255,255,.25); color:#fff; box-shadow:none; padding:12px 24px; font-size:16px;}
+  .btn.small{padding:12px 22px; font-size:16px;}
+
+  .garages{display:flex; gap:20px; justify-content:center; flex-wrap:wrap;}
+  .garage{
+    background:rgba(255,255,255,.9); border:4px solid var(--storm); border-radius:16px;
+    min-width:180px; min-height:150px; padding:10px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .garage:active{transform:translateY(3px);}
+  .garage .glabel{font-weight:900; font-size:18px; color:var(--storm);}
+  .garage .bin{display:flex; flex-wrap:wrap; gap:4px; justify-content:center;}
+
+  .flashbox{
+    background:rgba(255,255,255,.92); border-radius:24px; width:min(90vw,560px); height:min(40vh,280px);
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:14px; padding:16px;
+  }
+
+  .counter{
+    background:#fff; border-radius:999px; padding:8px 22px; font-size:26px; font-weight:900; color:var(--storm);
+  }
+
+  .progress{display:flex; gap:6px; justify-content:center; flex-wrap:wrap;}
+  .dot{width:12px; height:12px; border-radius:50%; background:rgba(255,255,255,.4);}
+  .dot.on{background:#fff;}
+
+  .menu{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; width:min(94vw,760px);}
+  .mcard{
+    background:var(--paper); border-radius:20px; padding:18px; text-align:left; cursor:pointer;
+    border:0; font-family:inherit; box-shadow:0 5px 0 rgba(0,0,0,.15);
+  }
+  .mcard:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.15);}
+  .mcard h3{margin:0 0 6px; font-size:21px;}
+  .mcard p{margin:0; font-size:14px; color:#667; line-height:1.4;}
+  .mcard .badge{display:inline-block; margin-top:10px; font-size:12px; font-weight:900; padding:4px 10px; border-radius:999px; background:#eef1f6; color:#667;}
+  .mcard .badge.ok{background:#d9f6de; color:#1c7a2e;}
+
+  .results{
+    background:var(--paper); border-radius:20px; padding:18px; width:min(94vw,860px);
+    max-height:64vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  }
+  .results h2{margin:0 0 4px; font-size:24px;}
+  .results table{width:100%; border-collapse:collapse; font-size:15px;}
+  .results th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#889; padding:8px 6px; border-bottom:2px solid var(--line);}
+  .results td{padding:9px 6px; border-bottom:1px solid var(--line); vertical-align:top;}
+  .band{display:inline-block; padding:3px 11px; border-radius:999px; font-size:12px; font-weight:900; white-space:nowrap;}
+  .band.later{background:#d9f6de; color:#1c7a2e;}
+  .band.early{background:#fff3d0; color:#8a6100;}
+  .band.notyet{background:#ffe0d9; color:#a13a20;}
+  .band.skip{background:#eef1f6; color:#889;}
+  .fnote{font-size:13px; color:#667; margin-top:2px;}
+
+  .fade{animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="pill" id="crumb">Storm Chaser</div>
+    <div class="spacer"></div>
+    <button class="iconbtn hidden" id="sayBtn" title="Say it again">🔊</button>
+    <button class="iconbtn" id="homeBtn" title="Home">🏠</button>
+  </div>
+  <div class="stage" id="stage"></div>
+  <div class="progress" id="progress"></div>
+</div>
+
+<script>
+/* ============================================================
+   STORM CHASER — MATH CHECK
+   A play-based diagnostic mapped to the California
+   Preschool/Transitional Kindergarten Learning Foundations
+   (PTKLF), Mathematics domain.
+
+   Each item declares:
+     f     : foundation id  (e.g. "1.3")
+     band  : "early" (3–4.5 yrs) or "later" (4–5.5 yrs)
+   A foundation is scored at the highest band passed.
+
+   DESIGN RULES (from the foundations themselves):
+   - Working memory at this age holds 1–2 pieces of info.
+     Every instruction is one step.
+   - NO right/wrong feedback. This is a measurement, not a
+     lesson. Feedback here would teach mid-test and corrupt
+     the reading. Every answer gets the same warm response.
+   - Nothing is timed except the subitizing flash, which
+     must be timed to be valid.
+   ============================================================ */
+
+/* ---------- tiny helpers ---------- */
+const $ = id => document.getElementById(id);
+const stage = $('stage');
+const el = (tag, cls, html) => { const n=document.createElement(tag); if(cls) n.className=cls; if(html!=null) n.innerHTML=html; return n; };
+const shuffle = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(p=>p[1]);
+const range = (a,b) => Array.from({length:b-a+1},(_,i)=>a+i);
+
+/* ---------- artwork ---------- */
+const COLORS = {red:'#e8453c', blue:'#2f7fd4', yellow:'#f5b921', green:'#2fb344', purple:'#7c5cd6', orange:'#ff7a3d'};
+
+function car(color='#e8453c', size=76){
+  return `<svg viewBox="0 0 100 60" width="${size}" height="${size*0.6}" aria-hidden="true">
+    <path d="M8 42 L14 28 Q17 22 24 22 L62 22 Q70 22 75 28 L88 34 Q94 36 94 42 L94 46 Q94 50 90 50 L10 50 Q6 50 6 46 Z" fill="${color}" stroke="rgba(0,0,0,.25)" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M26 27 L44 27 L44 38 L20 38 Z" fill="#cfeaff" opacity=".95"/>
+    <path d="M50 27 L60 27 Q66 27 70 33 L72 38 L50 38 Z" fill="#cfeaff" opacity=".95"/>
+    <circle cx="28" cy="50" r="9" fill="#2d3340"/><circle cx="28" cy="50" r="3.5" fill="#c9ced8"/>
+    <circle cx="74" cy="50" r="9" fill="#2d3340"/><circle cx="74" cy="50" r="3.5" fill="#c9ced8"/>
+  </svg>`;
+}
+function truck(color='#2f7fd4', size=76){
+  return `<svg viewBox="0 0 100 60" width="${size}" height="${size*0.6}" aria-hidden="true">
+    <rect x="8" y="20" width="50" height="26" rx="4" fill="${color}" stroke="rgba(0,0,0,.25)" stroke-width="2.5"/>
+    <path d="M58 30 L74 30 Q82 30 86 38 L90 46 L58 46 Z" fill="${color}" stroke="rgba(0,0,0,.25)" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="62" y="33" width="16" height="10" rx="2" fill="#cfeaff"/>
+    <circle cx="26" cy="47" r="8.5" fill="#2d3340"/><circle cx="26" cy="47" r="3" fill="#c9ced8"/>
+    <circle cx="78" cy="47" r="8.5" fill="#2d3340"/><circle cx="78" cy="47" r="3" fill="#c9ced8"/>
+  </svg>`;
+}
+function tornado(size=76, color='#5a6b80'){
+  return `<svg viewBox="0 0 60 80" width="${size*0.75}" height="${size}" aria-hidden="true">
+    <path d="M6 10 Q30 2 54 10 Q40 18 30 18 Q18 18 6 10 Z" fill="${color}" opacity=".85"/>
+    <path d="M11 22 Q30 15 49 22 Q36 29 30 29 Q22 29 11 22 Z" fill="${color}" opacity=".9"/>
+    <path d="M16 33 Q30 27 44 33 Q34 39 30 39 Q25 39 16 33 Z" fill="${color}"/>
+    <path d="M20 43 Q30 38 40 43 Q33 48 30 48 Q27 48 20 43 Z" fill="${color}"/>
+    <path d="M24 52 Q30 48 36 52 Q32 57 30 57 Q28 57 24 52 Z" fill="${color}"/>
+    <path d="M26 61 Q30 58 34 61 Q31 66 30 66 Q29 66 26 61 Z" fill="${color}"/>
+    <ellipse cx="30" cy="71" rx="13" ry="4" fill="${color}" opacity=".35"/>
+  </svg>`;
+}
+function cone(size=56){
+  return `<svg viewBox="0 0 60 70" width="${size*0.75}" height="${size}" aria-hidden="true">
+    <path d="M30 6 L46 56 L14 56 Z" fill="#ff7a3d" stroke="rgba(0,0,0,.25)" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="18" y="34" width="24" height="8" fill="#fff" opacity=".9"/>
+    <rect x="8" y="56" width="44" height="8" rx="3" fill="#e8622a" stroke="rgba(0,0,0,.25)" stroke-width="2"/>
+  </svg>`;
+}
+function shapeSvg(kind, size=92){
+  const s=`width="${size}" height="${size}" viewBox="0 0 100 100"`;
+  const st='stroke="rgba(0,0,0,.3)" stroke-width="4" stroke-linejoin="round"';
+  const c='#2f7fd4';
+  const map = {
+    circle:`<circle cx="50" cy="50" r="38" fill="${c}" ${st}/>`,
+    square:`<rect x="14" y="14" width="72" height="72" rx="3" fill="${c}" ${st}/>`,
+    triangle:`<path d="M50 12 L88 84 L12 84 Z" fill="${c}" ${st}/>`,
+    rectangle:`<rect x="8" y="28" width="84" height="44" rx="3" fill="${c}" ${st}/>`,
+    diamond:`<rect x="22" y="22" width="56" height="56" rx="3" fill="${c}" ${st} transform="rotate(45 50 50)"/>`,
+    tiltTri:`<path d="M50 12 L88 84 L12 84 Z" fill="${c}" ${st} transform="rotate(150 50 50)"/>`,
+    oval:`<ellipse cx="50" cy="50" rx="42" ry="26" fill="${c}" ${st}/>`,
+    hexagon:`<path d="M50 10 L86 30 L86 70 L50 90 L14 70 L14 30 Z" fill="${c}" ${st}/>`,
+    // 3-D
+    sphere:`<circle cx="50" cy="52" r="34" fill="${c}" ${st}/><ellipse cx="39" cy="40" rx="11" ry="7" fill="#fff" opacity=".45" transform="rotate(-25 39 40)"/>`,
+    cube:`<path d="M22 34 L50 20 L78 34 L78 68 L50 82 L22 68 Z" fill="${c}" ${st}/><path d="M22 34 L50 48 L78 34" fill="none" ${st}/><path d="M50 48 L50 82" fill="none" ${st}/>`,
+    cylinder:`<path d="M24 30 L24 70 Q24 82 50 82 Q76 82 76 70 L76 30 Z" fill="${c}" ${st}/><ellipse cx="50" cy="30" rx="26" ry="11" fill="#5aa3e0" ${st}/>`,
+    cone3d:`<path d="M50 14 L78 74 Q50 84 22 74 Z" fill="${c}" ${st}/><ellipse cx="50" cy="74" rx="28" ry="10" fill="#5aa3e0" ${st}/>`
+  };
+  return `<svg ${s} aria-hidden="true">${map[kind]||''}</svg>`;
+}
+function bridge(w=300){
+  return `<svg viewBox="0 0 300 130" width="${w}" height="${w*0.43}" aria-hidden="true">
+    <rect x="0" y="18" width="300" height="20" rx="4" fill="#8a94a6" stroke="rgba(0,0,0,.25)" stroke-width="3"/>
+    <rect x="26" y="38" width="20" height="72" fill="#8a94a6" stroke="rgba(0,0,0,.25)" stroke-width="3"/>
+    <rect x="254" y="38" width="20" height="72" fill="#8a94a6" stroke="rgba(0,0,0,.25)" stroke-width="3"/>
+  </svg>`;
+}
+function numeralCard(n){ return `<div style="font-size:56px;font-weight:900">${n}</div>`; }
+
+/* ---------- voice ---------- */
+let voiceOn = true, currentLine = '';
+function say(text){
+  currentLine = text;
+  if(!voiceOn || !window.speechSynthesis) return;
+  try{
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.9; u.pitch = 1.1; u.lang = 'en-US';
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+$('sayBtn').onclick = () => say(currentLine);
+
+/* ============================================================
+   ITEM BANK
+   ============================================================ */
+const SECTIONS = [
+  {
+    id:'A', name:'Load the Storm Truck', emoji:'🚚',
+    blurb:'Counting, how-many, quick-looking, and number shapes.',
+    covers:'Foundations 1.1 – 1.5',
+    items:['rote','oneToOneEarly','cardinality','subEarly','subLater','numerals']
+  },
+  {
+    id:'B', name:'Which Road?', emoji:'🛣️',
+    blurb:'More and fewer, and what happens when cars join or leave.',
+    covers:'Foundations 1.6, 2.1 – 2.3',
+    items:['cmpEarly','cmpLater','addEarly','addLater','subtractLater','decomposeLater']
+  },
+  {
+    id:'C', name:'Sort the Garage', emoji:'🔧',
+    blurb:'Grouping by attribute, and repeating patterns.',
+    covers:'Foundations 2.5 – 2.6',
+    items:['sortEarly','sortLater','patEarly','patLater','patLater2']
+  },
+  {
+    id:'D', name:'Storm Road Signs', emoji:'🌪️',
+    blurb:'Flat shapes, solid shapes, position words, and turning things to fit.',
+    covers:'Foundations 4.1 – 4.6',
+    items:['shapes2d','shapes3d','posEarly','posLater','rotation']
+  }
+];
+
+const FOUNDATIONS = {
+  '1.1':{name:'Reciting numbers', early:'Counts to 10 in order', later:'Counts to 30; can start from a number other than 1'},
+  '1.2':{name:'One-to-one correspondence', early:'Counts 5+ objects, one number per object', later:'Counts 10+ objects accurately'},
+  '1.3':{name:'Cardinality', early:'Counts to answer "how many" but still unsure the last word is the total', later:'Knows the last number counted IS the total'},
+  '1.4':{name:'Subitizing', early:'Sees 1–4 at a glance', later:'Sees 1–5 at a glance'},
+  '1.5':{name:'Numeral recognition', early:'Names a few numerals under 10', later:'Names all numerals through 10'},
+  '1.6':{name:'Comparing groups', early:'Says "same" or "more" for obviously different groups', later:'Says more / same / less / fewer by counting'},
+  '2.1':{name:'Adding & subtracting', early:'Knows adding or taking away changes the amount', later:'Knows ±1 changes the count by exactly one'},
+  '2.2':{name:'Composing numbers', early:'A group is made of smaller parts', later:'Breaks 5 into 3 and 2, or 1 and 4'},
+  '2.3':{name:'Solving problems', early:'Solves with very small numbers', later:'Solves with sums up to 10'},
+  '2.5':{name:'Sorting', early:'Sorts by one attribute', later:'Sorts by a second attribute, flexibly'},
+  '2.6':{name:'Patterns', early:'Copies an ABAB pattern with help', later:'Extends AABB and ABC patterns'},
+  '4.1':{name:'2-D shapes', early:'Circle, square, triangle, rectangle', later:'Also handles rotated and unusual versions'},
+  '4.2':{name:'3-D shapes', early:'Informal names — ball, box', later:'Sphere, cube, cylinder'},
+  '4.5':{name:'Position words', early:'in/on, under/over, inside/outside', later:'also between, next to, in front of/behind'},
+  '4.6':{name:'Mental rotation', early:'Fits things by trial and error', later:'Turns it the right way before placing'}
+};
+
+const ITEMS = {
+
+/* ---------- SECTION A ---------- */
+rote:{
+  f:'1.1', kind:'parentChoice',
+  prompt:'Count as high as you can!',
+  script:'Say: "Show me how high you can count." Let him go until he stops or loses the sequence. A few small slips are fine.',
+  why:'Rote counting is memorised sequence — it is separate from knowing what the numbers mean.',
+  options:[
+    {label:'Stopped before 10', band:null},
+    {label:'Got to about 10', band:'early'},
+    {label:'Got to about 20', band:'early'},
+    {label:'Got to 30 or past it', band:'later'}
+  ]
+},
+oneToOneEarly:{
+  f:'1.2', kind:'tapCount',
+  prompt:'Load every car onto the truck!',
+  spoken:'Tap each car to load it on the truck.',
+  n:7, thresholdEarly:5, thresholdLater:10, secondRoundN:12,
+  script:'Let him tap. Do not count out loud for him.',
+  why:'Tapping each car exactly once is the same skill as touching each object once while counting.'
+},
+cardinality:{
+  f:'1.3', kind:'parentChoice',
+  prompt:'How many cars are on the truck?',
+  spoken:'How many cars are on the truck?',
+  script:'Ask "How many cars?" — then WAIT. Do not hint. Watch what he does.',
+  why:'This is the single most important item in the whole check. A child with cardinality answers from the count he just did. A child without it starts counting all over again, because to him the counting IS the answer.',
+  options:[
+    {label:'Answered right away, correctly', band:'later', note:'Has cardinality'},
+    {label:'Counted them all over again, then answered', band:'early', note:'Counting is solid; cardinality still forming — this is the growth edge'},
+    {label:'Guessed or did not know', band:null, note:'Cardinality not yet established'}
+  ]
+},
+subEarly:{
+  f:'1.4', kind:'flash', n:3, ms:1300, choices:[1,2,3,4,5],
+  prompt:'Quick! How many tornadoes?',
+  spoken:'Watch closely. How many tornadoes?',
+  script:'They flash and disappear on purpose — he should not have time to count.',
+  why:'Subitizing is instant number perception, not counting. It predicts later arithmetic fluency.'
+},
+subLater:{
+  f:'1.4', band:'later', kind:'flash', n:5, ms:1300, choices:[3,4,5,6,7],
+  prompt:'One more! How many tornadoes?',
+  spoken:'One more. How many tornadoes?'
+},
+numerals:{
+  f:'1.5', kind:'parentGrid',
+  prompt:'Read the race numbers!',
+  script:'Point to each number and ask "What number is this?" Tap the ones he names correctly. Skip any he cannot get — no re-tries.',
+  why:'Naming a printed numeral is a different skill from counting aloud. Plenty of children count to 20 but cannot read a 7.',
+  cells: range(1,10).map(n=>({key:String(n), html:numeralCard(n)})),
+  scoreEarly:3, scoreLater:10
+},
+
+/* ---------- SECTION B ---------- */
+cmpEarly:{
+  f:'1.6', kind:'choice',
+  prompt:'Which road has MORE cars?',
+  spoken:'Which road has more cars?',
+  script:'Big obvious difference — he should not need to count.',
+  why:'Early comparison is perceptual: one pile just looks bigger.',
+  options:[
+    {html:groupOf(2,'car','red'), correct:false},
+    {html:groupOf(7,'car','blue'), correct:true}
+  ]
+},
+cmpLater:{
+  f:'1.6', band:'later', kind:'choice',
+  prompt:'Which road has FEWER cars?',
+  spoken:'Which road has fewer cars?',
+  script:'Now they are close, so he has to count. And "fewer" is the harder word — most children learn "more" long before "fewer".',
+  why:'Counting to compare, plus understanding the less/fewer direction.',
+  options:[
+    {html:groupOf(6,'car','yellow'), correct:false},
+    {html:groupOf(5,'car','green'), correct:true}
+  ]
+},
+addEarly:{
+  f:'2.3', kind:'choice',
+  prompt:'2 cars are here. 1 more drives up. How many now?',
+  spoken:'Two cars are here. One more drives up. How many cars now?',
+  script:'You can show the picture and re-tell it once. Do not count for him.',
+  why:'Adding with very small numbers, in a story he can picture.',
+  scene: sceneAdd(2,1),
+  options:[{html:numeralCard(2),correct:false},{html:numeralCard(3),correct:true},{html:numeralCard(4),correct:false}]
+},
+addLater:{
+  f:'2.3', band:'later', kind:'choice',
+  prompt:'4 cars are parked. 3 more arrive. How many now?',
+  spoken:'Four cars are parked. Three more arrive. How many cars now?',
+  script:'Sums to 10 is the "later" band. He may count the picture — that is fine and expected.',
+  why:'Larger sums, still with objects to look at.',
+  scene: sceneAdd(4,3),
+  options:[{html:numeralCard(6),correct:false},{html:numeralCard(7),correct:true},{html:numeralCard(8),correct:false}]
+},
+subtractLater:{
+  f:'2.1', band:'later', kind:'choice',
+  prompt:'6 cars. The tornado blows 1 away. How many left?',
+  spoken:'Six cars. The tornado blows one away. How many are left?',
+  script:'Watch whether he counts from scratch or just says five. Both are correct answers — only the tap is scored.',
+  why:'Knowing that taking one away moves the count by exactly one.',
+  scene: sceneSub(6),
+  options:[{html:numeralCard(4),correct:false},{html:numeralCard(5),correct:true},{html:numeralCard(6),correct:false}]
+},
+decomposeLater:{
+  f:'2.2', band:'later', kind:'choice',
+  prompt:'5 cars. 3 went in this garage. How many in the other?',
+  spoken:'Five cars. Three went in this garage. How many are in the other one?',
+  script:'The second garage is closed — he cannot see inside. He has to work it out.',
+  why:'Breaking 5 into parts. This is the seed of addition facts.',
+  scene: sceneDecompose(),
+  options:[{html:numeralCard(1),correct:false},{html:numeralCard(2),correct:true},{html:numeralCard(3),correct:false}]
+},
+
+/* ---------- SECTION C ---------- */
+sortEarly:{
+  f:'2.5', kind:'sort',
+  prompt:'Put the red cars and blue cars in their garages.',
+  spoken:'Put the red cars in the red garage, and the blue cars in the blue garage.',
+  script:'Tap a car, then tap a garage. He can change his mind.',
+  why:'Sorting by one attribute — colour is the easiest one.',
+  bins:[{key:'red',label:'Red'},{key:'blue',label:'Blue'}],
+  pieces:[
+    {bin:'red', html:car(COLORS.red,64)},{bin:'blue', html:car(COLORS.blue,64)},
+    {bin:'red', html:car(COLORS.red,64)},{bin:'blue', html:truck(COLORS.blue,64)},
+    {bin:'blue', html:car(COLORS.blue,64)},{bin:'red', html:truck(COLORS.red,64)}
+  ]
+},
+sortLater:{
+  f:'2.5', band:'later', kind:'sort',
+  prompt:'Now sort them by CARS and TRUCKS.',
+  spoken:'Now sort them a different way. Cars in one garage, trucks in the other.',
+  script:'Same vehicles, new rule. If he keeps sorting by colour, that is the finding — note it.',
+  why:'Re-sorting the same set by a second attribute needs mental flexibility, not just matching.',
+  bins:[{key:'car',label:'Cars'},{key:'truck',label:'Trucks'}],
+  pieces:[
+    {bin:'car', html:car(COLORS.red,64)},{bin:'truck', html:truck(COLORS.blue,64)},
+    {bin:'car', html:car(COLORS.blue,64)},{bin:'truck', html:truck(COLORS.yellow,64)},
+    {bin:'car', html:car(COLORS.green,64)},{bin:'truck', html:truck(COLORS.red,64)}
+  ]
+},
+patEarly:{
+  f:'2.6', kind:'choice',
+  prompt:'What comes next on the road?',
+  spoken:'What comes next?',
+  script:'Point along the row left to right as you say "car, cone, car, cone…"',
+  why:'ABAB is the first pattern children hold.',
+  scene: scenePattern([ 'car','cone','car','cone' ]),
+  options:[{html:car(COLORS.red,70),correct:true},{html:cone(60),correct:false},{html:tornado(60),correct:false}]
+},
+patLater:{
+  f:'2.6', band:'later', kind:'choice',
+  prompt:'What comes next now?',
+  spoken:'What comes next now?',
+  script:'This one is AABB — two of each. Harder than it looks.',
+  why:'AABB requires holding a two-item unit, not just alternating.',
+  scene: scenePattern([ 'car','car','cone','cone','car','car' ]),
+  options:[{html:car(COLORS.red,70),correct:false},{html:cone(60),correct:true},{html:tornado(60),correct:false}]
+},
+patLater2:{
+  f:'2.6', band:'later', kind:'choice',
+  prompt:'And what comes next here?',
+  spoken:'And what comes next here?',
+  script:'Three-item unit: car, cone, tornado.',
+  why:'ABC is the top of the "later" band for patterning.',
+  scene: scenePattern([ 'car','cone','tornado','car','cone','tornado','car' ]),
+  options:[{html:tornado(60),correct:false},{html:cone(60),correct:true},{html:car(COLORS.red,70),correct:false}]
+},
+
+/* ---------- SECTION D ---------- */
+shapes2d:{
+  f:'4.1', kind:'parentGrid',
+  prompt:'Name the road signs!',
+  script:'Ask "What shape is this?" for each. Tap the ones he names correctly. A rotated square called "diamond" counts as NOT correct for square — that is exactly what this item is testing.',
+  why:'The last four are the "later" band: same shapes, turned or unusual. Many children know a square only in its upright form.',
+  cells:[
+    {key:'circle', html:shapeSvg('circle',80)},
+    {key:'square', html:shapeSvg('square',80)},
+    {key:'triangle', html:shapeSvg('triangle',80)},
+    {key:'rectangle', html:shapeSvg('rectangle',80)},
+    {key:'diamond', html:shapeSvg('diamond',80), hard:true},
+    {key:'tiltTri', html:shapeSvg('tiltTri',80), hard:true},
+    {key:'oval', html:shapeSvg('oval',80), hard:true},
+    {key:'hexagon', html:shapeSvg('hexagon',80), hard:true}
+  ],
+  scoreEarly:3, scoreLater:6
+},
+shapes3d:{
+  f:'4.2', kind:'parentGrid',
+  prompt:'Name the solid shapes!',
+  script:'Ask "What is this shape?" Tap any he names — informal names like "ball", "box" or "tube" count as correct here, but jot which he used.',
+  why:'Early band = informal names. Later band = sphere, cube, cylinder.',
+  cells:[
+    {key:'sphere', html:shapeSvg('sphere',80)},
+    {key:'cube', html:shapeSvg('cube',80)},
+    {key:'cylinder', html:shapeSvg('cylinder',80)},
+    {key:'cone3d', html:shapeSvg('cone3d',80), hard:true}
+  ],
+  scoreEarly:1, scoreLater:3,
+  followUp:'Did he use the words sphere, cube or cylinder — or ball, box and tube?'
+},
+posEarly:{
+  f:'4.5', kind:'choice',
+  prompt:'Which car is UNDER the bridge?',
+  spoken:'Which car is under the bridge?',
+  script:'One word, one instruction. Say it once and wait.',
+  why:'under/over is the early band of position language.',
+  options:[
+    {html:posScene('under'), correct:true, wide:true},
+    {html:posScene('on'), correct:false, wide:true}
+  ]
+},
+posLater:{
+  f:'4.5', band:'later', kind:'choice',
+  prompt:'Which car is BETWEEN the cones?',
+  spoken:'Which car is between the two cones?',
+  script:'"Between" is a later-band word and a common gap.',
+  why:'between / next to / in front of are the harder half of position language.',
+  options:[
+    {html:betweenScene(false), correct:false, wide:true},
+    {html:betweenScene(true), correct:true, wide:true}
+  ]
+},
+rotation:{
+  f:'4.6', kind:'rotate',
+  prompt:'Turn the car so it fits in the parking space!',
+  spoken:'Turn the car so it fits in the parking space. Tap the arrow to turn it.',
+  script:'Let him turn it as many times as he likes, then tap PARK IT. The app counts the turns.',
+  why:'Getting there in one or two turns suggests he is rotating it in his head first. Spinning it round and round is trial and error — the early band.'
+}
+};
+
+/* ---------- scene builders (declared as functions so they hoist) ---------- */
+function groupOf(n, kind, colorName){
+  const c = COLORS[colorName]||COLORS.red;
+  let out='<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:260px">';
+  for(let i=0;i<n;i++) out += (kind==='car'?car(c,54):tornado(46));
+  return out+'</div>';
+}
+function sceneAdd(a,b){
+  let out='<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:center;background:rgba(255,255,255,.9);border-radius:20px;padding:16px">';
+  out+='<div style="display:flex;gap:6px">';
+  for(let i=0;i<a;i++) out+=car(COLORS.blue,58);
+  out+='</div><div style="font-size:40px;font-weight:900;color:#4a5568">+</div><div style="display:flex;gap:6px">';
+  for(let i=0;i<b;i++) out+=car(COLORS.orange,58);
+  out+='</div></div>';
+  return out;
+}
+function sceneSub(n){
+  let out='<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;background:rgba(255,255,255,.9);border-radius:20px;padding:16px">';
+  out+='<div style="display:flex;gap:6px;flex-wrap:wrap;max-width:340px;justify-content:center">';
+  for(let i=0;i<n-1;i++) out+=car(COLORS.green,54);
+  out+=`<span style="opacity:.28">${car(COLORS.green,54)}</span>`;
+  out+='</div>'+tornado(72)+'</div>';
+  return out;
+}
+function sceneDecompose(){
+  let out='<div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap;justify-content:center;background:rgba(255,255,255,.9);border-radius:20px;padding:16px">';
+  out+='<div style="text-align:center"><div style="display:flex;gap:5px">'+car(COLORS.red,50)+car(COLORS.red,50)+car(COLORS.red,50)+'</div><div style="font-weight:900;margin-top:6px;color:#4a5568">Garage 1</div></div>';
+  out+='<div style="text-align:center"><div style="width:150px;height:60px;background:#8a94a6;border-radius:8px;border:4px solid #4a5568;display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;font-weight:900">?</div><div style="font-weight:900;margin-top:6px;color:#4a5568">Garage 2</div></div>';
+  return out+'</div>';
+}
+function scenePattern(seq){
+  const art = {car:car(COLORS.red,60), cone:cone(52), tornado:tornado(52)};
+  let out='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;background:rgba(255,255,255,.9);border-radius:20px;padding:14px">';
+  seq.forEach(s=> out+=`<div>${art[s]}</div>`);
+  out+='<div style="width:66px;height:56px;border:4px dashed #7c5cd6;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#7c5cd6">?</div>';
+  return out+'</div>';
+}
+function posScene(where){
+  const carTop = where==='on' ? '-6px' : '58px';
+  return `<div style="position:relative;width:250px;height:130px">
+    <div style="position:absolute;top:26px;left:0">${bridge(250)}</div>
+    <div style="position:absolute;top:${carTop};left:88px">${car(COLORS.red,66)}</div>
+  </div>`;
+}
+function betweenScene(isBetween){
+  if(isBetween){
+    return `<div style="display:flex;align-items:flex-end;gap:4px;height:120px">${cone(58)}${car(COLORS.yellow,70)}${cone(58)}</div>`;
+  }
+  return `<div style="display:flex;align-items:flex-end;gap:4px;height:120px">${car(COLORS.yellow,70)}${cone(58)}${cone(58)}</div>`;
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const results = {};   // foundation -> {band, detail}
+const doneSections = {};
+let queue = [], qi = 0, activeSection = null;
+
+function record(f, band, detail){
+  const rank = {null:0, 'early':1, 'later':2};
+  const prev = results[f];
+  if(!prev || rank[band] > rank[prev.band]){
+    results[f] = {band: band, detail: detail||''};
+  } else if(prev && !prev.detail && detail){
+    prev.detail = detail;
+  }
+  if(!results[f]) results[f] = {band:null, detail:detail||''};
+}
+
+/* ============================================================
+   SCREENS
+   ============================================================ */
+function clear(){ stage.innerHTML=''; stage.className='stage fade'; void stage.offsetWidth; }
+function setCrumb(t){ $('crumb').textContent = t; }
+function showSay(on){ $('sayBtn').classList.toggle('hidden', !on); }
+
+function drawProgress(){
+  const p = $('progress'); p.innerHTML='';
+  if(!activeSection){ return; }
+  queue.forEach((_,i)=>{ const d=el('div','dot'+(i<=qi?' on':'')); p.appendChild(d); });
+}
+
+function home(){
+  activeSection=null; queue=[]; qi=0;
+  clear(); showSay(false); setCrumb('Storm Chaser'); drawProgress();
+  stage.appendChild(el('div','', `<div style="text-align:center">
+    <div style="font-size:60px">🌪️🚗</div>
+    <h1>Storm Chaser</h1>
+    <div class="sub" style="margin-top:6px">A math check that plays like a game. Pick a stop — about 5 minutes each. Any order is fine.</div>
+  </div>`));
+
+  const menu = el('div','menu');
+  SECTIONS.forEach(s=>{
+    const b = el('button','mcard');
+    b.innerHTML = `<h3>${s.emoji} ${s.name}</h3><p>${s.blurb}</p>
+      <span class="badge ${doneSections[s.id]?'ok':''}">${doneSections[s.id]?'✓ Done':s.covers}</span>`;
+    b.onclick = ()=> startSection(s);
+    menu.appendChild(b);
+  });
+  stage.appendChild(menu);
+
+  const row = el('div','btnrow');
+  const r = el('button','btn purple','See the results');
+  r.onclick = showResults;
+  row.appendChild(r);
+  const v = el('button','btn ghost', voiceOn?'🔊 Voice on':'🔇 Voice off');
+  v.onclick = ()=>{ voiceOn=!voiceOn; if(!voiceOn && window.speechSynthesis) speechSynthesis.cancel(); home(); };
+  row.appendChild(v);
+  stage.appendChild(row);
+}
+
+function startSection(s){
+  activeSection = s; queue = s.items.slice(); qi = 0;
+  setCrumb(`${s.emoji} ${s.name}`);
+  runItem();
+}
+
+function next(){
+  qi++;
+  if(qi >= queue.length){ endSection(); return; }
+  runItem();
+}
+
+function endSection(){
+  doneSections[activeSection.id] = true;
+  clear(); showSay(false); drawProgress();
+  const s = activeSection;
+  stage.appendChild(el('div','',`<div style="text-align:center">
+    <div style="font-size:64px">🏁</div>
+    <h1>Stop complete!</h1>
+    <div class="sub">${s.name} — all done.</div></div>`));
+  const row = el('div','btnrow');
+  const b1 = el('button','btn','Back to the map'); b1.onclick = home;
+  const b2 = el('button','btn purple','See results so far'); b2.onclick = showResults;
+  row.appendChild(b1); row.appendChild(b2);
+  stage.appendChild(row);
+  say('Great driving! Stop complete.');
+}
+
+/* ---------- item router ---------- */
+function runItem(){
+  const item = ITEMS[queue[qi]];
+  clear(); drawProgress();
+  showSay(!!(item.spoken || item.prompt));
+  if(item.spoken || item.prompt) say(item.spoken || item.prompt);
+
+  switch(item.kind){
+    case 'parentChoice': renderParentChoice(item); break;
+    case 'parentGrid':   renderParentGrid(item);   break;
+    case 'tapCount':     renderTapCount(item);     break;
+    case 'flash':        renderFlash(item);        break;
+    case 'choice':       renderChoice(item);       break;
+    case 'sort':         renderSort(item);         break;
+    case 'rotate':       renderRotate(item);       break;
+    default: next();
+  }
+}
+
+/* ---------- neutral transition: never says right or wrong ---------- */
+const CHEERS = ['Nice driving!','Good one!','On to the next stop!','Great!','Keep rolling!','Nice work!'];
+function advance(){
+  const c = CHEERS[Math.floor(Math.random()*CHEERS.length)];
+  clear(); showSay(false);
+  stage.appendChild(el('div','',`<div style="text-align:center"><div style="font-size:70px">🚗💨</div><h1>${c}</h1></div>`));
+  say(c);
+  setTimeout(next, 900);
+}
+
+/* ---------- renderers ---------- */
+function grownupBox(item){
+  const box = el('div','grownup');
+  box.innerHTML = `<div class="tag">For the grown-up</div>
+    <div class="say">${item.script||''}</div>
+    ${item.why?`<div class="why">${item.why}</div>`:''}`;
+  return box;
+}
+
+function renderParentChoice(item){
+  stage.appendChild(el('div','prompt', item.prompt));
+  stage.appendChild(grownupBox(item));
+  const row = el('div','btnrow');
+  item.options.forEach(o=>{
+    const b = el('button','btn alt small', o.label);
+    b.onclick = ()=>{ record(item.f, o.band, o.note||o.label); advance(); };
+    row.appendChild(b);
+  });
+  stage.appendChild(row);
+}
+
+function renderParentGrid(item){
+  stage.appendChild(el('div','prompt', item.prompt));
+  stage.appendChild(grownupBox(item));
+  const field = el('div','playfield');
+  const got = new Set();
+  item.cells.forEach(c=>{
+    const card = el('div','card '+(String(c.key).length<3?'obj':'obj'));
+    card.innerHTML = c.html;
+    card.onclick = ()=>{
+      if(got.has(c.key)){ got.delete(c.key); card.classList.remove('sel'); }
+      else { got.add(c.key); card.classList.add('sel'); }
+      done.textContent = `Got ${got.size} of ${item.cells.length} — tap when finished`;
+    };
+    field.appendChild(card);
+  });
+  stage.appendChild(field);
+  const done = el('button','btn', `Got 0 of ${item.cells.length} — tap when finished`);
+  done.onclick = ()=>{
+    const n = got.size;
+    let band = null;
+    if(n >= item.scoreLater) band='later';
+    else if(n >= item.scoreEarly) band='early';
+    const named = item.cells.filter(c=>got.has(c.key)).map(c=>c.key).join(', ');
+    record(item.f, band, `${n} of ${item.cells.length}${named?': '+named:''}`);
+    advance();
+  };
+  stage.appendChild(done);
+}
+
+function renderTapCount(item){
+  let roundN = item.n, isSecond = false;
+  const runRound = ()=>{
+    clear(); drawProgress(); showSay(true);
+    stage.appendChild(el('div','prompt', item.prompt));
+    const counter = el('div','counter','Loaded: 0');
+    stage.appendChild(counter);
+    const field = el('div','playfield');
+    let loaded = 0;
+    for(let i=0;i<roundN;i++){
+      const c = el('div','card obj');
+      c.innerHTML = car(Object.values(COLORS)[i % 6], 66);
+      c.onclick = ()=>{
+        c.classList.add('done'); loaded++;
+        counter.textContent = 'Loaded: ' + loaded;
+        if(loaded === roundN){
+          setTimeout(()=>{
+            if(!isSecond && roundN >= item.thresholdEarly){
+              // passed early band, try the 10+ round
+              record(item.f,'early',`Loaded all ${roundN}`);
+              isSecond = true; roundN = item.secondRoundN;
+              say('Wow! Now a big load. Tap every car.');
+              runRound();
+            } else {
+              record(item.f, isSecond?'later':'early', `Loaded all ${roundN}`);
+              advance();
+            }
+          }, 450);
+        }
+      };
+      field.appendChild(c);
+    }
+    stage.appendChild(field);
+    stage.appendChild(grownupBox(item));
+    const skip = el('button','btn ghost','He stopped early — move on');
+    skip.onclick = ()=>{
+      record(item.f, loaded>=item.thresholdEarly?'early':null, `Tapped ${loaded} of ${roundN} before stopping`);
+      advance();
+    };
+    stage.appendChild(skip);
+  };
+  runRound();
+}
+
+function renderFlash(item){
+  stage.appendChild(el('div','prompt','Ready? Watch the sky!'));
+  stage.appendChild(grownupBox(item.script?item:{script:'They flash and vanish on purpose — he should not have time to count.',why:item.why}));
+  const go = el('button','btn','Show me! 🌪️');
+  go.onclick = ()=>{
+    clear(); showSay(false);
+    const box = el('div','flashbox');
+    const positions = shuffle(range(0,7)).slice(0,item.n);
+    positions.forEach(()=> box.appendChild(el('div','', tornado(64))));
+    stage.appendChild(box);
+    say('Watch!');
+    setTimeout(()=>{
+      clear(); showSay(true);
+      stage.appendChild(el('div','prompt', item.prompt));
+      say(item.spoken||item.prompt);
+      const field = el('div','playfield');
+      item.choices.forEach(n=>{
+        const c = el('div','card num', String(n));
+        c.onclick = ()=>{
+          const ok = (n === item.n);
+          record(item.f, ok ? (item.band||'early') : null, `Flashed ${item.n}, he said ${n}`);
+          advance();
+        };
+        field.appendChild(c);
+      });
+      stage.appendChild(field);
+      const skip = el('button','btn ghost','He did not answer');
+      skip.onclick = ()=>{ record(item.f, null, `Flashed ${item.n}, no answer`); advance(); };
+      stage.appendChild(skip);
+    }, item.ms);
+  };
+  stage.appendChild(go);
+}
+
+function renderChoice(item){
+  stage.appendChild(el('div','prompt', item.prompt));
+  if(item.scene) stage.appendChild(el('div','', item.scene));
+  const field = el('div','playfield');
+  shuffle(item.options.slice()).forEach(o=>{
+    const c = el('div','card '+(o.wide?'wide':'tall'));
+    c.innerHTML = o.html;
+    c.onclick = ()=>{
+      record(item.f, o.correct ? (item.band||'early') : null, o.correct?'Correct':'Chose the other one');
+      advance();
+    };
+    field.appendChild(c);
+  });
+  stage.appendChild(field);
+  stage.appendChild(grownupBox(item));
+}
+
+function renderSort(item){
+  stage.appendChild(el('div','prompt', item.prompt));
+  const pieces = shuffle(item.pieces.map((p,i)=>({...p, id:i})));
+  let selected = null, placed = 0, correct = 0;
+
+  const tray = el('div','playfield');
+  const cardFor = {};
+  pieces.forEach(p=>{
+    const c = el('div','card obj'); c.innerHTML = p.html;
+    cardFor[p.id] = c;
+    c.onclick = ()=>{
+      Object.values(cardFor).forEach(x=>x.classList.remove('sel'));
+      selected = p; c.classList.add('sel');
+    };
+    tray.appendChild(c);
+  });
+  stage.appendChild(tray);
+
+  const gwrap = el('div','garages');
+  item.bins.forEach(b=>{
+    const g = el('div','garage');
+    g.innerHTML = `<div class="glabel">${b.label}</div>`;
+    const bin = el('div','bin'); g.appendChild(bin);
+    g.onclick = ()=>{
+      if(!selected) return;
+      const c = cardFor[selected.id];
+      c.classList.add('done'); c.classList.remove('sel');
+      const mini = el('div','', selected.html.replace(/width="\d+"/, 'width="40"').replace(/height="[\d.]+"/, 'height="24"'));
+      bin.appendChild(mini);
+      if(selected.bin === b.key) correct++;
+      placed++; selected = null;
+      if(placed === pieces.length){
+        setTimeout(()=>{
+          let band = null;
+          if(correct === pieces.length) band = item.band || 'early';
+          else if(correct >= pieces.length - 1) band = item.band ? 'early' : 'early';
+          record(item.f, band, `${correct} of ${pieces.length} sorted correctly`);
+          advance();
+        }, 400);
+      }
+    };
+    gwrap.appendChild(g);
+  });
+  stage.appendChild(gwrap);
+  stage.appendChild(grownupBox(item));
+}
+
+function renderRotate(item){
+  stage.appendChild(el('div','prompt', item.prompt));
+  const target = 90;               // the slot is vertical
+  let angle = 0, turns = 0;
+
+  const wrap = el('div','', `<div style="display:flex;align-items:center;gap:26px;flex-wrap:wrap;justify-content:center">
+    <div id="rotCar" style="background:#fffdf7;border-radius:18px;padding:14px;transition:transform .25s ease">${car(COLORS.purple,110)}</div>
+    <div style="width:90px;height:150px;border:5px dashed #fff;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900">SPOT</div>
+  </div>`);
+  stage.appendChild(wrap);
+
+  const row = el('div','btnrow');
+  const turn = el('button','btn alt','↻ Turn it');
+  turn.onclick = ()=>{
+    angle = (angle + 90) % 360; turns++;
+    $('rotCar').style.transform = `rotate(${angle}deg)`;
+  };
+  const park = el('button','btn','Park it!');
+  park.onclick = ()=>{
+    const fits = (angle === target || angle === (target+180)%360);
+    let band = null;
+    if(fits && turns <= 2) band='later';
+    else if(fits) band='early';
+    record(item.f, band, fits ? `Fitted after ${turns} turn${turns===1?'':'s'}` : `Parked it sideways after ${turns} turns`);
+    advance();
+  };
+  row.appendChild(turn); row.appendChild(park);
+  stage.appendChild(row);
+  stage.appendChild(grownupBox(item));
+}
+
+/* ============================================================
+   RESULTS
+   ============================================================ */
+function bandLabel(b){
+  if(b==='later') return '<span class="band later">Later (4–5½)</span>';
+  if(b==='early') return '<span class="band early">Early (3–4½)</span>';
+  if(b===null) return '<span class="band notyet">Not yet</span>';
+  return '<span class="band skip">Not checked</span>';
+}
+
+function showResults(){
+  clear(); showSay(false); setCrumb('Results'); activeSection=null; drawProgress();
+  stage.appendChild(el('div','prompt','What we found'));
+
+  const box = el('div','results');
+  const order = Object.keys(FOUNDATIONS);
+  let rows = '';
+  order.forEach(f=>{
+    const r = results[f];
+    const info = FOUNDATIONS[f];
+    const b = r ? r.band : undefined;
+    const target = b==='later' ? '— at TK-entry level' : (info[b==='early'?'later':'early']);
+    rows += `<tr>
+      <td style="white-space:nowrap"><strong>${f}</strong><br><span style="font-size:13px">${info.name}</span></td>
+      <td>${bandLabel(b)}${r&&r.detail?`<div class="fnote">${r.detail}</div>`:''}</td>
+      <td style="font-size:13px;color:#556">${b==='later' ? 'At the TK-entry band already.' : 'Next: '+ (b==='early'? info.later : info.early)}</td>
+    </tr>`;
+  });
+  box.innerHTML = `<h2>Foundations checked</h2>
+    <div class="fnote" style="margin-bottom:10px">Mapped to the California PTKLF, Mathematics domain. <strong>Early</strong> = typical for 3–4½. <strong>Later</strong> = typical for 4–5½, i.e. where he wants to be at TK entry (fall 2027).</div>
+    <table><thead><tr><th>Foundation</th><th>Where he is</th><th>Growth edge</th></tr></thead><tbody>${rows}</tbody></table>`;
+  stage.appendChild(box);
+
+  const row = el('div','btnrow');
+  const copy = el('button','btn','📋 Copy results');
+  copy.onclick = ()=>{
+    const lines = ['Storm Chaser — Math Check results', new Date().toLocaleDateString(), ''];
+    order.forEach(f=>{
+      const r = results[f];
+      const b = r ? (r.band===null?'Not yet':(r.band==='early'?'Early (3-4.5)':'Later (4-5.5)')) : 'Not checked';
+      lines.push(`${f} ${FOUNDATIONS[f].name}: ${b}${r&&r.detail?' — '+r.detail:''}`);
+    });
+    const text = lines.join('\n');
+    if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>{copy.textContent='✓ Copied!'; setTimeout(()=>copy.textContent='📋 Copy results',1600);});
+    else { window.prompt('Copy this:', text); }
+  };
+  const back = el('button','btn alt','Back to the map'); back.onclick = home;
+  row.appendChild(copy); row.appendChild(back);
+  stage.appendChild(row);
+}
+
+/* ---------- boot ---------- */
+$('homeBtn').onclick = home;
+document.addEventListener('touchmove', e=>{ if(e.scale && e.scale!==1) e.preventDefault(); }, {passive:false});
+home();
+</script>
+</body>
+</html>
