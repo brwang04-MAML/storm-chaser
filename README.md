@@ -1,9 +1,10 @@
 # 🌪️ Storm Chaser — Math Check
 
-A free, play-based math diagnostic for children aged roughly 3 to 5, mapped to the
-**California Preschool/Transitional Kindergarten Learning Foundations (PTKLF)**, Mathematics domain.
+**v2** · A free, play-based mathematics check for children aged roughly 3 to 5, mapped to
+the **California Preschool/Transitional Kindergarten Learning Foundations (PTKLF)**.
 
-Runs in any browser. Designed for iPad. No install, no account, no data leaves the device.
+Runs in any browser. Built for iPad, works on a laptop. No install, no account, nothing
+stored, nothing transmitted.
 
 **▶️ [Play it here](https://brwang04-maml.github.io/storm-chaser/)**
 
@@ -11,58 +12,105 @@ Runs in any browser. Designed for iPad. No install, no account, no data leaves t
 
 ## What it measures
 
-Fifteen foundations across four ~5-minute "stops":
+Sixteen foundations across four stops of about five minutes each.
 
-| Stop | Foundations |
+| Stop | Covers |
 |---|---|
-| 🚚 Load the Storm Truck | 1.1 reciting numbers · 1.2 one-to-one correspondence · 1.3 cardinality · 1.4 subitizing · 1.5 numeral recognition |
-| 🛣️ Which Road? | 1.6 comparing groups · 2.1 adding & subtracting · 2.2 composing · 2.3 solving problems |
-| 🔧 Sort the Garage | 2.5 sorting & classifying · 2.6 patterns |
-| 🌪️ Storm Road Signs | 4.1 2-D shapes · 4.2 3-D shapes · 4.5 position words · 4.6 mental rotation |
+| 🚚 Load the Storm Truck | reciting numbers · one-to-one correspondence · cardinality · subitizing · numeral recognition |
+| 🛣️ Which Road? | comparing groups · adding and taking away · composing numbers · solving problems |
+| 🔧 Sort the Garage | sorting and classifying · patterns |
+| 🌪️ Storm Road Signs | 2-D shapes · shape names · solid shape names · position words · mental rotation |
 
-Each foundation is reported at one of three levels: **Not yet**, **Early** (typical 3–4½),
-or **Later** (typical 4–5½ — i.e. where a child is heading by TK entry).
+Results are reported in four groups — **Number sense**, **Patterns & sorting**,
+**Spatial thinking**, and **Math language** — at one of three levels: *Not yet*,
+*Early* (typical 3–4½), or *Later* (typical 4–5½, i.e. TK entry).
 
 ## Design principles
 
-These come from the foundations themselves, not from game convention:
+These come from the foundations themselves and from playtesting, not from game convention.
 
-- **No right/wrong feedback.** Every answer gets the same warm response. Corrective
-  feedback during a diagnostic teaches the answer and invalidates the measurement.
-  It also has to feel like a game the child cannot lose.
-- **One instruction at a time.** Working memory at this age holds one to two pieces of
-  information (Foundation 2.1, Approaches to Learning). Multi-step instructions measure
-  memory, not math.
-- **Nothing is timed** except the subitizing flash, which must be timed to be valid.
-- **The adult is part of the design.** The foundations say "with adult support" repeatedly
-  in the Early band. Items that cannot be scored by a tap — most importantly cardinality —
-  ask the grown-up to record what they observed.
+**No right or wrong feedback, ever.** Every answer gets the same warm response.
+Corrective feedback during a diagnostic teaches the answer and invalidates the
+measurement. It also has to feel like a game the child cannot lose.
 
-## The cardinality item
+**One instruction at a time.** Working memory at this age holds one to two pieces of
+information. Multi-step instructions measure memory, not mathematics.
 
-The most diagnostic moment in the whole thing. After the child counts the cars onto
-the truck, the app asks "how many?" and the adult records whether the child **answered
-from the count he just did** or **started counting all over again**.
+**Nothing explanatory on the play screen.** The adult is supervising a small child and
+cannot read a paragraph mid-item. Rationale lives in the report, where it aids
+interpretation instead of competing with it.
+
+**Everything randomised.** Fixed quantities make a diagnostic single-use — the child
+answers the second run from memory. Every number, colour, shape and rotation is generated
+fresh, so progress can actually be measured over time.
+
+**No fine motor demand on the child.** Where precision would be the limiting factor, the
+adult records the observation. Otherwise the item measures mouse control.
+
+**Nothing fades to mean "gone."** Reduced opacity does not read as absence to a
+three-year-old. Objects visibly leave.
+
+**Quantities are answered with quantities.** Answering "how many" with a written numeral
+silently requires numeral recognition — a different foundation, measured separately.
+
+## Three items worth understanding
+
+### Cardinality
+
+The most diagnostic moment in the check. After the child counts, the app asks "how many?"
+and the **adult** records whether he answered from the count he just made or started
+counting all over again.
 
 A child who re-counts has one-to-one correspondence but not yet cardinality — to him,
-counting *is* the answer, rather than producing one. This is invisible on a worksheet and
-invisible to auto-scoring, and it is the highest-leverage thing to know about a
-pre-K child's number sense.
+counting *is* the answer rather than producing one. This is invisible on a worksheet and
+cannot be auto-scored.
+
+### "Fewer"
+
+Asked twice on the same picture: once with *fewer*, once with *more*.
+
+Donaldson & Balfour (1968) found that among children aged 3:5 to 4:1, only one of fifteen
+answered "less" consistently correctly. Townsend (1974) named the measurement problem
+that follows: a single question cannot separate a child who reads "fewer" as "more" from
+one who has no meaning for the word.
+
+Two questions on one picture distinguish four outcomes — and only one of them, missing
+both, is a mathematics finding. The others are reported as **vocabulary, not maths**.
+
+### Shapes, split in two
+
+Naming a shape is vocabulary. The mathematics is recognising a rotated square as still a
+square. So the geometry item is silent and non-verbal, and shape naming is reported
+separately under Math language. A child with no shape words can still score at the later
+band on geometry.
 
 ## For educators
 
 The item bank is a plain JavaScript object near the top of the `<script>` block in
-`index.html`. Each item declares the foundation it targets (`f`) and the band it probes
-(`band`). Items can be edited, reordered or removed without touching the engine.
+`index.html`. Each item declares the foundation it targets (`f`), the band it probes
+(`band`), the child-facing question (`say`), the adult's one-line cue (`hint`), and a
+`build()` function that generates fresh randomised content each run. Items can be edited,
+reordered or removed without touching the engine.
 
-Results stay in memory only — nothing is stored or transmitted. Use the **Copy results**
-button before closing the tab.
+All report copy — what each foundation measures, why it is included, what each band
+means, and what to try next — lives in the `F` object and can be rewritten for your own
+setting.
+
+Results stay in memory only. Use **Copy** before closing the tab.
 
 ## Not covered
 
-This checks the Mathematics domain only. It does **not** assess the social-emotional and
-self-regulation foundations, which carry the most weight in a California TK classroom and
-cannot be meaningfully measured on a tablet.
+Mathematics only. This does **not** assess the social-emotional and self-regulation
+foundations, which carry the most weight in a California TK classroom and cannot be
+meaningfully measured on a tablet.
+
+## References
+
+Donaldson, M. & Balfour, G. (1968). Less is more: a study of language comprehension in
+children. *British Journal of Psychology*, 59(4).
+Townsend, D. (1974). Children's comprehension of comparative forms.
+California Department of Education (2024). *Preschool/Transitional Kindergarten Learning
+Foundations.*
 
 ## Licence
 
