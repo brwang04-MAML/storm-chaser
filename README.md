@@ -69,10 +69,10 @@ cannot be auto-scored.
 
 Asked twice on the same picture: once with *fewer*, once with *more*.
 
-Donaldson & Balfour (1968) found that among children aged 3:5 to 4:1, only one of fifteen
-answered "less" consistently correctly. Townsend (1974) named the measurement problem
-that follows: a single question cannot separate a child who reads "fewer" as "more" from
-one who has no meaning for the word.
+Donaldson and Balfour (1968) tested fifteen children between three-and-a-half and four
+years old. Only one answered "less" correctly every time. Townsend (1974) named the
+measurement problem that follows: a single question cannot separate a child who reads
+"fewer" as "more" from one who has no meaning for the word at all.
 
 Two questions on one picture distinguish four outcomes — and only one of them, missing
 both, is a mathematics finding. The others are reported as **vocabulary, not maths**.
