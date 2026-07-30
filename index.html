@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Storm Chaser">
+<meta name="theme-color" content="#3aa6e0">
+<meta name="description" content="A play-based math check for 3-5 year olds, mapped to the California Preschool/Transitional Kindergarten Learning Foundations.">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
+<title>Storm Chaser — Math Check</title>
+<style>
+  :root{
+    --sky:#3aa6e0; --sky2:#8fd4f5; --storm:#4a5568; --ink:#1a202c;
+    --paper:#fffdf7; --line:#e3e7ee; --go:#2fb344; --grape:#7c5cd6;
+    --hot:#ff6b4a; --tap:#0f7fd4;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; height:100%; overflow:hidden;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;
+    background:linear-gradient(180deg,var(--sky2) 0%, var(--sky) 55%, #2a7fb5 100%);
+    color:var(--ink); user-select:none; -webkit-user-select:none; touch-action:manipulation;
+  }
+  #app{height:100%; display:flex; flex-direction:column; padding:14px; max-width:1100px; margin:0 auto;}
+  .topbar{display:flex; align-items:center; gap:10px; min-height:40px;}
+  .pill{background:rgba(255,255,255,.85); border-radius:999px; padding:5px 14px; font-weight:800; font-size:14px; color:var(--storm);}
+  .spacer{flex:1;}
+  .iconbtn{background:rgba(255,255,255,.85); border:0; border-radius:999px; width:40px; height:40px; font-size:18px; cursor:pointer;}
+  .stage{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; min-height:0; overflow:hidden;}
+
+  h1{font-size:clamp(28px,5.5vw,50px); margin:0; text-align:center; color:#fff; text-shadow:0 3px 0 rgba(0,0,0,.18);}
+  /* CHILD-FACING PROMPT — the only large text during play */
+  .prompt{font-size:clamp(24px,4.6vw,38px); font-weight:900; text-align:center; color:#fff;
+          text-shadow:0 2px 0 rgba(0,0,0,.2); line-height:1.2; max-width:900px;}
+  .sub{font-size:15px; color:rgba(255,255,255,.92); text-align:center; max-width:620px; line-height:1.4;}
+
+  /* GROWN-UP STRIP — one short line, never a paragraph. Rationale lives in the report. */
+  .hint{background:rgba(255,255,255,.92); border-left:5px solid var(--grape); border-radius:8px;
+        padding:7px 14px; font-size:14px; font-weight:700; color:#4a5568; max-width:640px; text-align:center;}
+  .hint b{color:var(--grape); font-size:11px; letter-spacing:.09em; text-transform:uppercase; display:block; margin-bottom:1px;}
+
+  .field{display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:12px; max-width:980px;}
+  .card{background:var(--paper); border-radius:18px; border:4px solid transparent;
+        display:flex; align-items:center; justify-content:center; cursor:pointer;
+        box-shadow:0 5px 0 rgba(0,0,0,.15); transition:transform .1s, border-color .1s, opacity .25s;}
+  .card:hover{border-color:#bcd9f0;}
+  .card:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.15);}
+  .card.sel{border-color:var(--tap); transform:translateY(-4px);}
+  .card.done{opacity:.3; pointer-events:none;}
+  .card.num{width:96px; height:112px; font-size:52px; font-weight:900;}
+  .card.tall{min-width:132px; min-height:132px; padding:12px;}
+  .card.obj{width:112px; height:98px;}
+  .card.wide{min-width:210px; padding:10px;}
+
+  .btnrow{display:flex; flex-wrap:wrap; gap:10px; justify-content:center;}
+  .btn{background:var(--go); color:#fff; border:0; border-radius:999px; padding:15px 32px;
+       font-size:19px; font-weight:900; cursor:pointer; box-shadow:0 5px 0 rgba(0,0,0,.2); font-family:inherit;}
+  .btn:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.2);}
+  .btn.alt{background:#fff; color:var(--storm);}
+  .btn.purple{background:var(--grape);}
+  .btn.small{padding:11px 20px; font-size:15px;}
+  .btn.ghost{background:rgba(255,255,255,.25); color:#fff; box-shadow:none; padding:9px 18px; font-size:14px;}
+
+  .scene{background:rgba(255,255,255,.93); border-radius:20px; padding:16px;
+         display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; max-width:900px;}
+  .total{background:#fff; border-radius:999px; padding:6px 20px; font-weight:900; font-size:20px; color:var(--storm);
+         display:flex; align-items:center; gap:8px;}
+  .carbox{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; max-width:330px;}
+  .carbox > *{transition:transform .45s ease, opacity .45s ease;}
+  .gone{transform:translate(70px,-60px) scale(.2) rotate(35deg) !important; opacity:0 !important;}
+  .intogarage{transform:translate(0,90px) scale(.3) !important; opacity:0 !important;}
+
+  .garages{display:flex; gap:18px; justify-content:center; flex-wrap:wrap;}
+  .garage{background:rgba(255,255,255,.92); border:4px solid var(--storm); border-radius:14px;
+          min-width:168px; min-height:138px; padding:9px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px;}
+  .garage:active{transform:translateY(3px);}
+  .glabel{font-weight:900; font-size:17px; color:var(--storm);}
+  .bin{display:flex; flex-wrap:wrap; gap:3px; justify-content:center;}
+  .closed{width:150px; height:76px; background:#8a94a6; border:4px solid var(--storm); border-radius:8px;
+          display:flex; align-items:center; justify-content:center; font-size:34px; color:#fff; font-weight:900;}
+  .slot{border:5px dashed #fff; border-radius:14px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900;}
+
+  .flashbox{background:rgba(255,255,255,.94); border-radius:22px; width:min(88vw,540px); height:min(38vh,260px);
+            display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:12px; padding:14px;}
+
+  .progress{display:flex; gap:5px; justify-content:center; flex-wrap:wrap; min-height:12px;}
+  .dot{width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.4);}
+  .dot.on{background:#fff;}
+
+  .menu{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:12px; width:min(94vw,740px);}
+  .mcard{background:var(--paper); border-radius:18px; padding:16px; text-align:left; cursor:pointer;
+         border:0; font-family:inherit; box-shadow:0 5px 0 rgba(0,0,0,.15);}
+  .mcard:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.15);}
+  .mcard h3{margin:0 0 5px; font-size:20px;}
+  .mcard p{margin:0; font-size:13px; color:#667; line-height:1.35;}
+  .mcard .badge{display:inline-block; margin-top:9px; font-size:11px; font-weight:900; padding:3px 9px; border-radius:999px; background:#eef1f6; color:#667;}
+  .mcard .badge.ok{background:#d9f6de; color:#1c7a2e;}
+
+  /* ---- report ---- */
+  .report{background:var(--paper); border-radius:18px; padding:18px; width:min(96vw,880px);
+          max-height:70vh; overflow-y:auto; -webkit-overflow-scrolling:touch; text-align:left;}
+  .report h2{margin:0 0 3px; font-size:23px;}
+  .report .lede{font-size:13px; color:#667; line-height:1.45; margin-bottom:14px;}
+  .grouphead{font-size:12px; font-weight:900; letter-spacing:.09em; text-transform:uppercase;
+             color:var(--grape); margin:20px 0 8px; padding-bottom:5px; border-bottom:2px solid var(--line);}
+  .fcard{border:1px solid var(--line); border-radius:12px; padding:13px; margin-bottom:10px;}
+  .fhead{display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-bottom:9px;}
+  .fnum{background:#eef1f6; border-radius:6px; padding:2px 7px; font-size:12px; font-weight:900; color:#667;}
+  .fname{font-size:17px; font-weight:900;}
+  .band{padding:3px 11px; border-radius:999px; font-size:11px; font-weight:900; white-space:nowrap;}
+  .band.later{background:#d9f6de; color:#1c7a2e;}
+  .band.early{background:#fff3d0; color:#8a6100;}
+  .band.notyet{background:#ffe0d9; color:#a13a20;}
+  .band.skip{background:#eef1f6; color:#889;}
+  .frow{font-size:14px; line-height:1.5; margin-bottom:6px; color:#33404f;}
+  .frow b{display:block; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:#8b95a4; margin-bottom:1px;}
+  .frow.obs{background:#f6f8fb; border-radius:8px; padding:8px 10px;}
+  .frow.mean{background:#fdf7ff; border-radius:8px; padding:8px 10px;}
+  .ver{display:inline-block; margin-top:6px; background:rgba(255,255,255,.9); color:#4a5568;
+       border-radius:999px; padding:3px 14px; font-size:13px; font-weight:900; letter-spacing:.04em;}
+  .fade{animation:fade .22s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="pill" id="crumb">Storm Chaser</div>
+    <div class="spacer"></div>
+    <button class="iconbtn hidden" id="sayBtn" title="Say it again">🔊</button>
+    <button class="iconbtn" id="homeBtn" title="Home">🏠</button>
+  </div>
+  <div class="stage" id="stage"></div>
+  <div class="progress" id="progress"></div>
+</div>
+
+<script>
+/* ============================================================
+   STORM CHASER — MATH CHECK  ·  v2
+   Mapped to the California Preschool/Transitional Kindergarten
+   Learning Foundations (PTKLF), Mathematics domain.
+
+   v2 PRINCIPLES (all driven by v1 playtest findings)
+   1. On screen during play: the child's question, and at most ONE
+      short line for the adult. All rationale lives in the report.
+   2. Every quantity is randomised per run, so the check can be
+      repeated without the child answering from memory.
+   3. The child never needs fine motor precision. Where an item
+      would test mouse control, the adult records the observation.
+   4. Nothing fades to mean "gone" — things visibly leave.
+   5. Quantity questions are answered with quantities, not numerals.
+      Numeral reading is measured once, on its own, in 1.5.
+   6. No right/wrong feedback, ever. This measures; it does not teach.
+   ============================================================ */
+
+/* Bump this on every upload. It is shown on the home screen and in the
+   report, so "which build am I looking at?" is never a guess again. */
+const VERSION = 'v2.1';
+
+const $ = id => document.getElementById(id);
+const stage = $('stage');
+const el = (t,c,h)=>{const n=document.createElement(t); if(c) n.className=c; if(h!=null) n.innerHTML=h; return n;};
+const shuffle = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(p=>p[1]);
+const range = (a,b)=>Array.from({length:b-a+1},(_,i)=>a+i);
+const rnd = (a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+/* ---------------- artwork ---------------- */
+const COLORS={red:'#e8453c',blue:'#2f7fd4',yellow:'#f5b921',green:'#2fb344',purple:'#7c5cd6',orange:'#ff7a3d'};
+const CNAMES=Object.keys(COLORS);
+
+function car(color='#e8453c', size=72, rot=0){
+  return `<svg viewBox="0 0 100 60" width="${size}" height="${size*0.6}" style="transform:rotate(${rot}deg)">
+    <path d="M8 42 L14 28 Q17 22 24 22 L62 22 Q70 22 75 28 L88 34 Q94 36 94 42 L94 46 Q94 50 90 50 L10 50 Q6 50 6 46 Z" fill="${color}" stroke="rgba(0,0,0,.25)" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M26 27 L44 27 L44 38 L20 38 Z" fill="#cfeaff"/><path d="M50 27 L60 27 Q66 27 70 33 L72 38 L50 38 Z" fill="#cfeaff"/>
+    <circle cx="28" cy="50" r="9" fill="#2d3340"/><circle cx="28" cy="50" r="3.5" fill="#c9ced8"/>
+    <circle cx="74" cy="50" r="9" fill="#2d3340"/><circle cx="74" cy="50" r="3.5" fill="#c9ced8"/></svg>`;
+}
+function truck(color='#2f7fd4', size=72){
+  return `<svg viewBox="0 0 100 60" width="${size}" height="${size*0.6}">
+    <rect x="8" y="20" width="50" height="26" rx="4" fill="${color}" stroke="rgba(0,0,0,.25)" stroke-width="2.5"/>
+    <path d="M58 30 L74 30 Q82 30 86 38 L90 46 L58 46 Z" fill="${color}" stroke="rgba(0,0,0,.25)" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="62" y="33" width="16" height="10" rx="2" fill="#cfeaff"/>
+    <circle cx="26" cy="47" r="8.5" fill="#2d3340"/><circle cx="78" cy="47" r="8.5" fill="#2d3340"/></svg>`;
+}
+function tornado(size=70,color='#5a6b80'){
+  return `<svg viewBox="0 0 60 80" width="${size*0.75}" height="${size}">
+    <path d="M6 10 Q30 2 54 10 Q40 18 30 18 Q18 18 6 10 Z" fill="${color}" opacity=".85"/>
+    <path d="M11 22 Q30 15 49 22 Q36 29 30 29 Q22 29 11 22 Z" fill="${color}" opacity=".9"/>
+    <path d="M16 33 Q30 27 44 33 Q34 39 30 39 Q25 39 16 33 Z" fill="${color}"/>
+    <path d="M20 43 Q30 38 40 43 Q33 48 30 48 Q27 48 20 43 Z" fill="${color}"/>
+    <path d="M24 52 Q30 48 36 52 Q32 57 30 57 Q28 57 24 52 Z" fill="${color}"/>
+    <path d="M26 61 Q30 58 34 61 Q31 66 30 66 Q29 66 26 61 Z" fill="${color}"/></svg>`;
+}
+function cone(size=52){
+  return `<svg viewBox="0 0 60 70" width="${size*0.75}" height="${size}">
+    <path d="M30 6 L46 56 L14 56 Z" fill="#ff7a3d" stroke="rgba(0,0,0,.25)" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="18" y="34" width="24" height="8" fill="#fff"/>
+    <rect x="8" y="56" width="44" height="8" rx="3" fill="#e8622a" stroke="rgba(0,0,0,.25)" stroke-width="2"/></svg>`;
+}
+function shapeSvg(kind,size=84,rot=0){
+  const st='stroke="rgba(0,0,0,.3)" stroke-width="4" stroke-linejoin="round"', c='#2f7fd4';
+  const m={
+    circle:`<circle cx="50" cy="50" r="38" fill="${c}" ${st}/>`,
+    square:`<rect x="16" y="16" width="68" height="68" rx="3" fill="${c}" ${st}/>`,
+    triangle:`<path d="M50 12 L88 84 L12 84 Z" fill="${c}" ${st}/>`,
+    rectangle:`<rect x="8" y="30" width="84" height="40" rx="3" fill="${c}" ${st}/>`,
+    oval:`<ellipse cx="50" cy="50" rx="42" ry="26" fill="${c}" ${st}/>`,
+    hexagon:`<path d="M50 10 L86 30 L86 70 L50 90 L14 70 L14 30 Z" fill="${c}" ${st}/>`,
+    star:`<path d="M50 8 L61 38 L93 38 L67 57 L77 88 L50 69 L23 88 L33 57 L7 38 L39 38 Z" fill="${c}" ${st}/>`,
+    sphere:`<circle cx="50" cy="52" r="34" fill="${c}" ${st}/><ellipse cx="39" cy="40" rx="11" ry="7" fill="#fff" opacity=".45" transform="rotate(-25 39 40)"/>`,
+    cube:`<path d="M22 34 L50 20 L78 34 L78 68 L50 82 L22 68 Z" fill="${c}" ${st}/><path d="M22 34 L50 48 L78 34" fill="none" ${st}/><path d="M50 48 L50 82" fill="none" ${st}/>`,
+    cylinder:`<path d="M24 30 L24 70 Q24 82 50 82 Q76 82 76 70 L76 30 Z" fill="${c}" ${st}/><ellipse cx="50" cy="30" rx="26" ry="11" fill="#5aa3e0" ${st}/>`,
+    cone3d:`<path d="M50 14 L78 74 Q50 84 22 74 Z" fill="${c}" ${st}/><ellipse cx="50" cy="74" rx="28" ry="10" fill="#5aa3e0" ${st}/>`
+  };
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="transform:rotate(${rot}deg)">${m[kind]||''}</svg>`;
+}
+function bridge(w=250){
+  return `<svg viewBox="0 0 300 130" width="${w}" height="${w*0.43}">
+    <rect x="0" y="18" width="300" height="20" rx="4" fill="#8a94a6" stroke="rgba(0,0,0,.25)" stroke-width="3"/>
+    <rect x="26" y="38" width="20" height="72" fill="#8a94a6" stroke="rgba(0,0,0,.25)" stroke-width="3"/>
+    <rect x="254" y="38" width="20" height="72" fill="#8a94a6" stroke="rgba(0,0,0,.25)" stroke-width="3"/></svg>`;
+}
+/* quantity answer option — cars, not numerals (v1 finding B6) */
+function carGroup(n,colorName,size=40){
+  const c=COLORS[colorName]||COLORS.blue;
+  let o=`<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:150px">`;
+  for(let i=0;i<n;i++) o+=car(c,size);
+  return o+'</div>';
+}
+function carRow(n,colorName,size=52,cls=''){
+  const c=COLORS[colorName]||COLORS.blue;
+  let o=`<div class="carbox ${cls}">`;
+  for(let i=0;i<n;i++) o+=`<div>${car(c,size)}</div>`;
+  return o+'</div>';
+}
+
+/* ---------------- voice ---------------- */
+let voiceOn=true, currentLine='';
+function say(t){
+  currentLine=t;
+  if(!voiceOn||!window.speechSynthesis) return;
+  try{ speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(t); u.rate=.9; u.pitch=1.1; u.lang='en-US';
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+$('sayBtn').onclick=()=>say(currentLine);
+
+/* ============================================================
+   FOUNDATION METADATA — everything explanatory lives HERE,
+   not on the play screen. Surfaced only in the report.
+   ============================================================ */
+const GROUPS = {
+  number:{label:'Number sense', note:'Counting, quantity and operations. This is the core of early mathematics.'},
+  reasoning:{label:'Patterns & sorting', note:'Noticing structure and grouping by rule — the reasoning side of early maths.'},
+  spatial:{label:'Spatial thinking', note:'Shape and space, measured without words. Predicts later mathematics and STEM outcomes.'},
+  language:{label:'Math language', note:'Words maths instruction is delivered in. A gap here is a vocabulary gap, NOT a number-sense gap — much faster to close, and it should not be read as a maths problem.'}
+};
+
+const F = {
+'1.1':{group:'number', name:'Reciting numbers',
+  measures:'Saying the number words in order, from memory.',
+  why:'Rote counting is a memorised sequence, separate from understanding what the numbers mean. A child can recite to thirty and still not know what "seven" refers to — which is why it is checked on its own.',
+  mean:{later:'The count sequence is well established past the range he needs.', early:'The sequence is in place for the range that matters at this age.', none:'The sequence is still being assembled. Everything else in number sense rests on it.'},
+  next:{later:'Try counting on from a number other than one — "start at 6."', early:'Extend past twenty; the teens are where sequences usually break.', none:'Count everything aloud together — stairs, grapes, buttons. Frequency matters more than duration.'}},
+
+'1.2':{group:'number', name:'One-to-one correspondence',
+  measures:'Giving exactly one number word to exactly one object.',
+  why:'The bridge between reciting numbers and actually counting. Children who skip objects or double-count have the sequence but not the mapping.',
+  mean:{later:'He tracks objects reliably across a larger set.', early:'He maps one word to one object for small sets — the expected level.', none:'Words and objects are not yet locked together; he may recite while pointing at random.'},
+  next:{later:'Count things that cannot be moved or touched — windows, claps, jumps.', early:'Move up to ten or twelve objects, in a line before a scatter.', none:'Move each object as he counts it. Physically separating counted from uncounted does the tracking for him.'}},
+
+'1.3':{group:'number', name:'Cardinality',
+  measures:'Knowing that the last number counted is how many there are.',
+  why:'The single most important item in this check. Many children count a set perfectly and, asked "how many?", count the whole set again — because to them counting IS the answer rather than producing one. It is invisible on a worksheet and cannot be auto-scored, which is why an adult records it.',
+  mean:{later:'Counting produces a quantity for him. This is the doorway to arithmetic.', early:'Counting is accurate but has not yet become quantity. This is the highest-value thing to work on right now — more than bigger numbers or written numerals.', none:'The link from counting to "how many" is not yet there.'},
+  next:{later:'Ask "how many?" about sets he has not just counted.', early:'After he counts, say the total back warmly — "you counted them, so there are five." Then ask again straight away. Do not correct; just model.', none:'Count small sets together and always end by naming the total out loud.'}},
+
+'1.4':{group:'number', name:'Subitizing',
+  measures:'Seeing how many without counting.',
+  why:'Instant number perception. It predicts later arithmetic fluency, because a child who sees "five" as a whole can work with it, while one who must recount every time carries a heavier load.',
+  mean:{later:'He perceives quantities up to five directly.', early:'He recognises small quantities at a glance — the expected level.', none:'Quantities are being counted rather than seen. Common, and it develops with exposure.'},
+  next:{later:'Show quick patterns of six to ten and ask how he saw it — "four and two."', early:'Flash dice and domino patterns; their fixed arrangements are easiest to internalise.', none:'Play with dice and dominoes without counting pressure.'}},
+
+'1.5':{group:'number', name:'Numeral recognition',
+  measures:'Naming written number symbols.',
+  why:'Reading a printed 7 is a different skill from counting to seven. Checked separately so that a numeral gap never gets mistaken for a quantity gap — plenty of children count to twenty and cannot read a 4.',
+  mean:{later:'He reads the numerals he needs for TK entry.', early:'A few numerals are known — typical, and usually the ones in his own life.', none:'Numerals are not yet attached to quantities.'},
+  next:{later:'Match numerals to quantities — put the 6 card next to six cars.', early:'Point out numerals in the world: lift buttons, house numbers, page numbers.', none:'Start with the numbers that mean something to him — his age, his floor, his birthday.'}},
+
+'1.6':{group:'number', name:'Comparing groups',
+  measures:'Deciding which of two groups has more, and which has fewer.',
+  why:'Asked twice on the same picture, once with "fewer" and once with "more". Donaldson & Balfour (1968) found that among children aged 3:5 to 4:1, only one in fifteen answered "less" consistently correctly. Townsend (1974) then noted the flaw a single question leaves: it cannot separate a child who reads "fewer" as "more" from one who has no meaning for the word. Two questions on one picture separate vocabulary from comparison — and only a failure on both is a mathematics finding.',
+  mean:{later:'He compares by counting and holds both directions of the comparison.', early:'Comparison works; the word "fewer" is the missing piece. That is vocabulary, and it closes far faster than a number-sense gap.', none:'Comparing two close groups by counting is not yet established. This one IS a maths finding.'},
+  next:{later:'Compare three groups; ask which has the most and the least.', early:'Use "fewer" out loud in real moments — "you have fewer grapes than me." Pair it with "more" in the same breath so the contrast is audible.', none:'Compare groups that differ obviously before groups that differ by one.'}},
+
+'2.1':{group:'number', name:'Adding & taking away',
+  measures:'Knowing that adding or removing changes how many there are.',
+  why:'The tornado visibly carries a car away rather than fading it out. Reduced opacity does not read as "gone" to a three-year-old — he sees a faded car, which is still a car.',
+  mean:{later:'He knows removing one moves the count by exactly one.', early:'He knows the amount changes, without yet tracking by how much.', none:'Change in quantity is not yet being tracked.'},
+  next:{later:'Take away two; ask him to predict before looking.', early:'Hide one from a small group and ask how many are hiding.', none:'Add and remove one object at a time, counting aloud after each move.'}},
+
+'2.2':{group:'number', name:'Composing numbers',
+  measures:'Understanding a group as made of smaller parts.',
+  why:'The whole set is shown and counted before any of it is hidden, so he is reasoning about a quantity he has actually seen. Answers are pictures of cars rather than numerals, so this measures quantity and not numeral reading.',
+  mean:{later:'He can break a small number into parts — the seed of addition facts.', early:'He knows a group has parts, without yet naming them.', none:'Part-whole structure has not emerged yet. Expected at this age.'},
+  next:{later:'Split five two ways, then ask for another way.', early:'Share objects between two people and count each share.', none:'Hide part of a small group under a cup and look together.'}},
+
+'2.3':{group:'number', name:'Solving problems',
+  measures:'Working out a total in a small story.',
+  why:'Everyday-situation problems with objects visible. Answers are quantities, not numerals.',
+  mean:{later:'He solves with sums up to ten.', early:'He solves with very small numbers — the expected level.', none:'Story problems are not yet accessible; the language may be as much the barrier as the maths.'},
+  next:{later:'Try problems without pictures — hold the quantities in his head.', early:'Grow the numbers slowly, keeping objects visible.', none:'Act the problems out with real objects and his own hands.'}},
+
+'2.5':{group:'reasoning', name:'Sorting & classifying',
+  measures:'Grouping by an attribute, then re-grouping by a different one.',
+  why:'The second round uses the same vehicles with a new rule. Re-sorting a set he has already sorted requires mental flexibility, not just matching — and continuing to sort by the old rule is itself the finding.',
+  mean:{later:'He switches rules — flexible classification.', early:'He sorts by one attribute; switching rules is still hard.', none:'Consistent sorting by a rule has not emerged.'},
+  next:{later:'Sort by two attributes at once — big red versus small red.', early:'Sort the same objects two ways in one sitting, naming each rule.', none:'Start with two very different groups and name the rule aloud.'}},
+
+'2.6':{group:'reasoning', name:'Patterns',
+  measures:'Working out what comes next in a repeating sequence.',
+  why:'Patterning is early algebraic thinking — finding a unit that repeats. AABB and ABC are harder than ABAB because the unit is longer than one item.',
+  mean:{later:'He handles multi-item pattern units.', early:'He handles simple alternation — the expected level.', none:'Repeating structure is not yet being noticed.'},
+  next:{later:'Ask him to name the repeating part, then build his own.', early:'Move from ABAB to AABB using physical objects.', none:'Build ABAB patterns together and chant them aloud.'}},
+
+'4.1':{group:'spatial', name:'2-D shapes',
+  measures:'Recognising a shape as the same shape when turned or resized. No words involved.',
+  why:'Naming shapes is vocabulary; the mathematics is knowing a square turned forty-five degrees is still a square. This item is silent and non-verbal on purpose, so a child who lacks the word is not marked down on geometry. Shape names are checked separately under Math language.',
+  mean:{later:'Shape identity survives rotation and resizing — real geometric understanding.', early:'He matches shapes in their usual orientation.', none:'Shape matching is still developing.'},
+  next:{later:'Ask what makes it that shape — count sides and corners.', early:'Turn shapes as you play with them so he sees them from every angle.', none:'Shape sorters and puzzles, without naming pressure.'}},
+
+'4.6':{group:'spatial', name:'Mental rotation',
+  measures:'Judging whether something will fit before moving it.',
+  why:'Choosing the car that fits, rather than turning one until it does. Trial and error measures persistence; choosing measures whether he can rotate the object in his head. Mental rotation is one of the stronger early predictors of later mathematics and STEM achievement, which is why it earns a place in a maths check.',
+  mean:{later:'He rotates objects mentally before acting.', early:'He is working it out by trial rather than in advance.', none:'Rotation is not yet being anticipated.'},
+  next:{later:'Jigsaws and tangrams; ask him to predict before placing.', early:'Puzzles where he must turn pieces, with time to think.', none:'Shape sorters, posting toys, block building.'}},
+
+'V1':{group:'language', name:'Shape names',
+  measures:'Naming flat shapes.',
+  why:'Separated from Foundation 4.1 on purpose. This is vocabulary, and reporting it as geometry would misrepresent a word gap as a thinking gap. Calling a rotated square a "diamond" is counted as not-yet-known for square — that specific error is the thing worth seeing.',
+  mean:{later:'He has the shape words, including harder ones.', early:'He has the common shape words.', none:'Shape vocabulary is still coming in.'},
+  next:{later:'Introduce hexagon, pentagon, oval.', early:'Name shapes in the world as you pass them.', none:'Name shapes aloud during play, without quizzing.'}},
+
+'4.2':{group:'language', name:'Solid shape names',
+  measures:'Naming three-dimensional shapes.',
+  why:'Informal names — ball, box, tube — count as known at this age. The formal words (sphere, cube, cylinder) are the later band.',
+  mean:{later:'He uses the formal names.', early:'He uses informal names, which is exactly right for his age.', none:'Solid shape vocabulary has not started.'},
+  next:{later:'Match solids to the flat shapes of their faces.', early:'Use both words together — "the ball, the sphere."', none:'Name solids during block and ball play.'}},
+
+'4.5':{group:'language', name:'Position words',
+  measures:'Understanding under, over, between, next to, behind.',
+  why:'Largely vocabulary — but it is the vocabulary mathematics instruction runs on. "Put the counter above the line", "the number between four and six." A child who cannot parse it fails tasks he actually understands, so it is worth knowing. Reported here rather than under number sense so it is never mistaken for a counting problem.',
+  mean:{later:'He handles the harder position words including between and behind.', early:'He has the basic set — under, over, in, on.', none:'Position language is still developing.'},
+  next:{later:'Give two-step position instructions during play.', early:'Narrate position constantly — "your cup is behind the bowl."', none:'Play hiding games using one position word at a time.'}}
+};
+
+/* ============================================================
+   ITEM BANK — every item builds its content fresh each run
+   so quantities are never memorable (v1 findings A5, B3).
+   `say`  = child-facing question (large, spoken)
+   `hint` = ONE short line for the adult
+   ============================================================ */
+const ITEMS = {
+
+/* ---------- A ---------- */
+rote:{f:'1.1', kind:'parentChoice',
+  say:'Count as high as you can!',
+  hint:'Let him go until he stops. Tap how far he got.',
+  build:()=>({options:[
+    {label:'Stopped before 10', band:null, note:'Stopped before ten'},
+    {label:'About 10', band:'early', note:'Reached about ten'},
+    {label:'About 20', band:'early', note:'Reached about twenty'},
+    {label:'30 or more', band:'later', note:'Reached thirty or beyond'}]})},
+
+oneToOne:{f:'1.2', kind:'parentChoice',
+  say:'Count the cars!',
+  hint:'He points and counts. You watch his finger, then tap.',
+  build:()=>{
+    const n=rnd(6,9), c=pick(CNAMES);
+    return {scene:`<div class="scene">${carRow(n,c,58)}</div>`, n:n, options:[
+      {label:'One number per car, all '+n, band:'later', note:`Counted ${n} objects, one word per object`},
+      {label:'Got 5 or so, then slipped', band:'early', note:'Accurate for about five, then lost track'},
+      {label:'Skipped or double-counted', band:null, note:'Words and objects not yet locked together'},
+      {label:'Did not count', band:null, note:'Did not attempt counting'}]};
+  }},
+
+cardinality:{f:'1.3', kind:'parentChoice',
+  say:'How many cars are there?',
+  hint:'Ask, then WAIT. Do not hint. Watch what he does.',
+  build:()=>({options:[
+    {label:'Answered straight away', band:'later', note:'Answered from the count he had just made — cardinality present'},
+    {label:'Counted them all again', band:'early', note:'Re-counted before answering — counting is solid, cardinality still forming'},
+    {label:'Guessed or did not know', band:null, note:'No total produced'}]})},
+
+subEarly:{f:'1.4', kind:'flash', band:'early',
+  say:'How many tornadoes?',
+  hint:'They vanish on purpose — no time to count.',
+  build:()=>{const n=rnd(2,4); return {n:n, choices:shuffle(range(1,5))};}},
+
+subLater:{f:'1.4', kind:'flash', band:'later',
+  say:'How many now?',
+  hint:'Same again, a bigger group.',
+  build:()=>{const n=rnd(5,6); return {n:n, choices:shuffle(range(3,7))};}},
+
+numerals:{f:'1.5', kind:'parentGrid',
+  say:'Read the race numbers!',
+  hint:'Point at each. Tap the ones he names right.',
+  build:()=>({cells:shuffle(range(1,10)).map(n=>({key:String(n), html:`<div style="font-size:50px;font-weight:900">${n}</div>`})),
+              scoreEarly:3, scoreLater:9})},
+
+/* ---------- B ---------- */
+cmpEarly:{f:'1.6', kind:'choice', band:'early',
+  say:'Which road has MORE cars?',
+  hint:'Big difference — no counting needed.',
+  build:()=>{const s=rnd(1,2), b=rnd(6,8);
+    return {options:[{html:carGroup(s,'red',44), correct:false},{html:carGroup(b,'blue',44), correct:true}],
+            note:`Groups of ${s} and ${b}`};}},
+
+cmpPair:{f:'1.6', kind:'comparePair', band:'later',
+  say:'Which road has FEWER cars?',
+  hint:'Ask once. Do NOT explain "fewer".',
+  say2:'Now — which road has MORE cars?',
+  hint2:'Same two roads. Ask even if he got the first one.',
+  build:()=>{const s=rnd(4,6), b=s+1;
+    return {small:s, big:b, options:[
+      {key:'big', html:carGroup(b,'yellow',42)},
+      {key:'small', html:carGroup(s,'green',42)}]};}},
+
+addEarly:{f:'2.3', kind:'choice', band:'early',
+  say:'How many cars now?',
+  hint:'Tell him: two cars, then one more drives up.',
+  build:()=>{const a=rnd(1,2), b=1, t=a+b, c1=pick(CNAMES), c2=pick(CNAMES);
+    const opts=shuffle([t,t+1,Math.max(1,t-1)].filter((v,i,s)=>s.indexOf(v)===i));
+    return {scene:`<div class="scene">${carRow(a,c1,52)}<div style="font-size:36px;font-weight:900;color:#4a5568">+</div>${carRow(b,c2,52)}</div>`,
+      spoken:`${a} cars are here. ${b} more drives up. How many cars now?`,
+      options:opts.map(v=>({html:carGroup(v,'blue',34), correct:v===t})), note:`${a} + ${b}`};}},
+
+addLater:{f:'2.3', kind:'choice', band:'later',
+  say:'How many cars now?',
+  hint:'Tell him the story once, then wait.',
+  build:()=>{const a=rnd(3,5), b=rnd(2,4), t=a+b, c1=pick(CNAMES), c2=pick(CNAMES);
+    const opts=shuffle([t,t+1,t-1]);
+    return {scene:`<div class="scene">${carRow(a,c1,48)}<div style="font-size:36px;font-weight:900;color:#4a5568">+</div>${carRow(b,c2,48)}</div>`,
+      spoken:`${a} cars are parked. ${b} more arrive. How many cars now?`,
+      options:opts.map(v=>({html:carGroup(v,'orange',30), correct:v===t})), note:`${a} + ${b}`};}},
+
+subtractWatch:{f:'2.1', kind:'watchRemove', band:'later',
+  say:'Watch the tornado!',
+  hint:'Press the button together, then ask.',
+  say2:'How many cars are left?',
+  hint2:'The car is gone — not faded. Ask and wait.',
+  build:()=>{const n=rnd(4,6), c=pick(CNAMES);
+    return {n:n, color:c, left:n-1, options:shuffle([n-1,n,n-2]).map(v=>({html:carGroup(v,c,34), correct:v===n-1})), note:`${n} take away 1`};}},
+
+decompose:{f:'2.2', kind:'watchHide', band:'later',
+  say:'Count the cars first!',
+  hint:'Count them aloud together, then press.',
+  say2:'How many are hiding in the closed garage?',
+  hint2:'He saw the total. Answers are pictures, not numbers.',
+  build:()=>{const t=rnd(4,6), a=rnd(2,t-1);
+    return {total:t, into:a, hidden:t-a, color:pick(CNAMES),
+      options:shuffle([t-a, t-a+1, Math.max(1,t-a-1)].filter((v,i,s)=>s.indexOf(v)===i))
+        .map(v=>({html:carGroup(v,'purple',34), correct:v===t-a})), note:`${t} split as ${a} and ${t-a}`};}},
+
+/* ---------- C ---------- */
+sortColor:{f:'2.5', kind:'sort', band:'early',
+  say:'Put each car in its own garage.',
+  hint:'Click a car, then click a garage.',
+  build:()=>{const [c1,c2]=shuffle(CNAMES).slice(0,2);
+    const p=[];
+    for(let i=0;i<3;i++){p.push({bin:c1, html:(i%2?truck(COLORS[c1],58):car(COLORS[c1],58))});
+                          p.push({bin:c2, html:(i%2?car(COLORS[c2],58):truck(COLORS[c2],58))});}
+    return {bins:[{key:c1,label:c1},{key:c2,label:c2}], pieces:p, note:`Sorted by colour: ${c1} / ${c2}`};}},
+
+sortType:{f:'2.5', kind:'sort', band:'later',
+  say:'Now sort cars and trucks.',
+  hint:'New rule, same vehicles. Sorting by colour again IS the finding.',
+  build:()=>{const p=[];
+    for(let i=0;i<3;i++){p.push({bin:'car', html:car(COLORS[pick(CNAMES)],58)});
+                          p.push({bin:'truck', html:truck(COLORS[pick(CNAMES)],58)});}
+    return {bins:[{key:'car',label:'Cars'},{key:'truck',label:'Trucks'}], pieces:p, note:'Re-sorted by vehicle type'};}},
+
+patAB:{f:'2.6', kind:'choice', band:'early',
+  say:'What comes next?',
+  hint:'Point along the row as you say it.',
+  build:()=>buildPattern(['A','B','A','B'], 'A')},
+
+patAABB:{f:'2.6', kind:'choice', band:'later',
+  say:'What comes next now?',
+  hint:'Two of each — harder than it looks.',
+  build:()=>buildPattern(['A','A','B','B','A','A'], 'B')},
+
+patABC:{f:'2.6', kind:'choice', band:'later',
+  say:'And what comes next here?',
+  hint:'Three things repeating.',
+  build:()=>buildPattern(['A','B','C','A','B','C','A'], 'B')},
+
+/* ---------- D ---------- */
+shapeMatchEarly:{f:'4.1', kind:'choice', band:'early',
+  say:'Find the SAME shape!',
+  hint:'No words needed. Just point and click.',
+  build:()=>buildShapeMatch(false)},
+
+shapeMatchLater:{f:'4.1', kind:'choice', band:'later',
+  say:'Find the SAME shape again!',
+  hint:'This time one is turned around.',
+  build:()=>buildShapeMatch(true)},
+
+shapeNames:{f:'V1', kind:'parentGrid',
+  say:'What shape is this?',
+  hint:'Tap the ones he names right. "Diamond" for a turned square = not right.',
+  build:()=>{const base=['circle','square','triangle','rectangle'], hard=['oval','hexagon','star'];
+    const cells=shuffle(base).map(k=>({key:k, html:shapeSvg(k,74)}))
+      .concat(shuffle(hard).slice(0,2).map(k=>({key:k, html:shapeSvg(k,74)})))
+      .concat([{key:'square (turned)', html:shapeSvg('square',74,45)}]);
+    return {cells:cells, scoreEarly:3, scoreLater:6};}},
+
+solidNames:{f:'4.2', kind:'parentGrid',
+  say:'What shape is this one?',
+  hint:'Ball, box and tube all count. Note which words he used.',
+  build:()=>({cells:shuffle(['sphere','cube','cylinder','cone3d']).map(k=>({key:k, html:shapeSvg(k,74)})),
+              scoreEarly:1, scoreLater:3})},
+
+posEarly:{f:'4.5', kind:'choice', band:'early',
+  say:'Which car is UNDER the bridge?',
+  hint:'One word. Say it once and wait.',
+  build:()=>({options:shuffle([
+      {html:posScene('under'), correct:true, wide:true},
+      {html:posScene('on'), correct:false, wide:true}]), note:'under / over'})},
+
+posLater:{f:'4.5', kind:'choice', band:'later',
+  say:'Which car is BETWEEN the cones?',
+  hint:'"Between" is the harder word.',
+  build:()=>({options:shuffle([
+      {html:betweenScene(true), correct:true, wide:true},
+      {html:betweenScene(false), correct:false, wide:true}]), note:'between'})},
+
+rotationChoice:{f:'4.6', kind:'choice', band:'later',
+  say:'Which car will fit in the space?',
+  hint:'Looking only — nothing to turn or drag.',
+  build:()=>{const vertical=Math.random()<.5;
+    const good=vertical?90:0, bads=vertical?[0,45]:[90,45];
+    const c=pick(CNAMES);
+    const opts=shuffle([{html:`<div style="width:110px;height:110px;display:flex;align-items:center;justify-content:center">${car(COLORS[c],86,good)}</div>`, correct:true}]
+      .concat(bads.map(a=>({html:`<div style="width:110px;height:110px;display:flex;align-items:center;justify-content:center">${car(COLORS[c],86,a)}</div>`, correct:false}))));
+    return {scene:`<div class="scene"><div class="slot" style="width:${vertical?'86px':'150px'};height:${vertical?'150px':'86px'};background:#5a6b80">PARK<br>HERE</div></div>`,
+      options:opts, note:vertical?'vertical slot':'horizontal slot'};}}
+};
+
+/* ---- builders used by items ---- */
+function buildPattern(seq, answer){
+  const kinds=shuffle(['car','cone','tornado']);
+  const map={A:kinds[0], B:kinds[1], C:kinds[2]};
+  const col=pick(CNAMES);
+  const art=k=>k==='car'?car(COLORS[col],56):(k==='cone'?cone(48):tornado(48));
+  let s='<div class="scene">';
+  seq.forEach(x=> s+=`<div>${art(map[x])}</div>`);
+  s+='<div style="width:60px;height:52px;border:4px dashed #7c5cd6;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#7c5cd6">?</div></div>';
+  const opts=shuffle(['A','B','C'].map(k=>({html:art(map[k]), correct:k===answer})));
+  return {scene:s, options:opts, note:seq.join('')+' → '+answer};
+}
+function buildShapeMatch(rotated){
+  const all=['circle','square','triangle','rectangle','hexagon','star','oval'];
+  const [target,d1,d2]=shuffle(all).slice(0,3);
+  const rot = rotated ? pick([30,45,135]) : 0;
+  const size = rotated ? 66 : 84;
+  const opts=shuffle([
+    {html:shapeSvg(target,size,rot), correct:true},
+    {html:shapeSvg(d1,84,0), correct:false},
+    {html:shapeSvg(d2,84,0), correct:false}]);
+  return {scene:`<div class="scene"><div style="text-align:center"><div style="font-size:11px;font-weight:900;letter-spacing:.08em;color:#8b95a4;margin-bottom:4px">THIS ONE</div>${shapeSvg(target,96)}</div></div>`,
+    options:opts, note:rotated?`${target}, turned ${rot}°`:target};
+}
+function posScene(where){
+  return `<div style="position:relative;width:230px;height:120px">
+    <div style="position:absolute;top:24px;left:0">${bridge(230)}</div>
+    <div style="position:absolute;top:${where==='on'?'-4px':'54px'};left:80px">${car(COLORS.red,62)}</div></div>`;
+}
+function betweenScene(isBetween){
+  return isBetween
+    ? `<div style="display:flex;align-items:flex-end;gap:4px;height:110px">${cone(54)}${car(COLORS.yellow,66)}${cone(54)}</div>`
+    : `<div style="display:flex;align-items:flex-end;gap:4px;height:110px">${car(COLORS.yellow,66)}${cone(54)}${cone(54)}</div>`;
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+const SECTIONS=[
+ {id:'A', name:'Load the Storm Truck', emoji:'🚚', blurb:'Counting, how-many, quick-looking, number shapes.',
+  items:['rote','oneToOne','cardinality','subEarly','subLater','numerals']},
+ {id:'B', name:'Which Road?', emoji:'🛣️', blurb:'More and fewer, joining and taking away.',
+  items:['cmpEarly','cmpPair','addEarly','addLater','subtractWatch','decompose']},
+ {id:'C', name:'Sort the Garage', emoji:'🔧', blurb:'Grouping by rule, and repeating patterns.',
+  items:['sortColor','sortType','patAB','patAABB','patABC']},
+ {id:'D', name:'Storm Road Signs', emoji:'🌪️', blurb:'Shapes, shape words, position words, fitting.',
+  items:['shapeMatchEarly','shapeMatchLater','shapeNames','solidNames','posEarly','posLater','rotationChoice']}
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let results={}, doneSections={}, attempts={};
+let queue=[], qi=0, activeSection=null, built=null;
+
+function record(f, band, note){
+  const rank={null:0,'early':1,'later':2};
+  const prev=results[f];
+  if(!prev){ results[f]={band:band, notes:note?[note]:[]}; return; }
+  if(rank[band]>rank[prev.band]) prev.band=band;
+  if(note) prev.notes.push(note);
+}
+/* v1 finding R1 — re-running a section REPLACES its result rather than merging */
+function resetSection(s){
+  const fs=new Set(s.items.map(k=>ITEMS[k].f));
+  fs.forEach(f=>delete results[f]);
+  attempts[s.id]=(attempts[s.id]||0)+1;
+}
+
+/* ============================================================
+   SHELL
+   ============================================================ */
+function clear(){ stage.innerHTML=''; stage.className='stage fade'; void stage.offsetWidth; }
+function crumb(t){ $('crumb').textContent=t; }
+function showSay(on){ $('sayBtn').classList.toggle('hidden',!on); }
+function hintBar(text){ return el('div','hint',`<b>For the grown-up</b>${text}`); }
+function drawProgress(){
+  const p=$('progress'); p.innerHTML='';
+  if(!activeSection) return;
+  queue.forEach((_,i)=>p.appendChild(el('div','dot'+(i<=qi?' on':''))));
+}
+
+function home(){
+  activeSection=null; queue=[]; qi=0;
+  clear(); showSay(false); crumb('Storm Chaser'); drawProgress();
+  stage.appendChild(el('div','',`<div style="text-align:center">
+    <div style="font-size:54px">🌪️🚗</div><h1>Storm Chaser</h1>
+    <div class="ver">${VERSION}</div>
+    <div class="sub" style="margin-top:4px">Four stops, about five minutes each. Any order. Numbers change every time, so it can be replayed.</div></div>`));
+  const menu=el('div','menu');
+  SECTIONS.forEach(s=>{
+    const b=el('button','mcard');
+    const n=attempts[s.id]||0;
+    b.innerHTML=`<h3>${s.emoji} ${s.name}</h3><p>${s.blurb}</p>
+      <span class="badge ${doneSections[s.id]?'ok':''}">${doneSections[s.id]?('✓ Done'+(n>1?` · ${n} runs`:'')):'Not started'}</span>`;
+    b.onclick=()=>startSection(s);
+    menu.appendChild(b);
+  });
+  stage.appendChild(menu);
+  const row=el('div','btnrow');
+  const r=el('button','btn purple','See the report'); r.onclick=showReport; row.appendChild(r);
+  const v=el('button','btn ghost', voiceOn?'🔊 Voice on':'🔇 Voice off');
+  v.onclick=()=>{voiceOn=!voiceOn; if(!voiceOn&&window.speechSynthesis) speechSynthesis.cancel(); home();};
+  row.appendChild(v);
+  stage.appendChild(row);
+}
+
+function startSection(s){
+  resetSection(s);
+  activeSection=s; queue=s.items.slice(); qi=0;
+  crumb(`${s.emoji} ${s.name}`);
+  runItem();
+}
+function next(){ qi++; if(qi>=queue.length) return endSection(); runItem(); }
+
+function endSection(){
+  doneSections[activeSection.id]=true;
+  clear(); showSay(false); drawProgress();
+  stage.appendChild(el('div','',`<div style="text-align:center"><div style="font-size:58px">🏁</div>
+    <h1>Stop complete!</h1><div class="sub">${activeSection.name}</div></div>`));
+  const row=el('div','btnrow');
+  const a=el('button','btn','Back to the map'); a.onclick=home;
+  const b=el('button','btn purple','See the report'); b.onclick=showReport;
+  row.appendChild(a); row.appendChild(b); stage.appendChild(row);
+  say('Great driving! Stop complete.');
+}
+
+const CHEERS=['Nice driving!','Good one!','Next stop!','Great!','Keep rolling!','Nice work!'];
+function advance(){
+  const c=pick(CHEERS);
+  clear(); showSay(false);
+  stage.appendChild(el('div','',`<div style="text-align:center"><div style="font-size:64px">🚗💨</div><h1>${c}</h1></div>`));
+  say(c);
+  setTimeout(next,800);
+}
+
+function runItem(){
+  const item=ITEMS[queue[qi]];
+  built=item.build ? item.build() : {};
+  clear(); drawProgress(); showSay(true);
+  say(built.spoken || item.say);
+  switch(item.kind){
+    case 'parentChoice': rParentChoice(item); break;
+    case 'parentGrid':   rParentGrid(item);   break;
+    case 'flash':        rFlash(item);        break;
+    case 'choice':       rChoice(item);       break;
+    case 'comparePair':  rComparePair(item);  break;
+    case 'sort':         rSort(item);         break;
+    case 'watchRemove':  rWatchRemove(item);  break;
+    case 'watchHide':    rWatchHide(item);    break;
+    default: next();
+  }
+}
+
+/* ============================================================
+   RENDERERS  — screen text is deliberately minimal
+   ============================================================ */
+function rParentChoice(item){
+  stage.appendChild(el('div','prompt', item.say));
+  if(built.scene) stage.appendChild(el('div','', built.scene));
+  const row=el('div','btnrow');
+  built.options.forEach(o=>{
+    const b=el('button','btn alt small', o.label);
+    b.onclick=()=>{ record(item.f, o.band, o.note||o.label); advance(); };
+    row.appendChild(b);
+  });
+  stage.appendChild(row);
+  stage.appendChild(hintBar(item.hint));
+}
+
+function rParentGrid(item){
+  stage.appendChild(el('div','prompt', item.say));
+  const field=el('div','field');
+  const got=new Set();
+  built.cells.forEach(c=>{
+    const card=el('div','card obj'); card.innerHTML=c.html;
+    card.onclick=()=>{
+      if(got.has(c.key)){got.delete(c.key); card.classList.remove('sel');}
+      else {got.add(c.key); card.classList.add('sel');}
+      done.textContent=`Done — ${got.size} of ${built.cells.length}`;
+    };
+    field.appendChild(card);
+  });
+  stage.appendChild(field);
+  const done=el('button','btn',`Done — 0 of ${built.cells.length}`);
+  done.onclick=()=>{
+    const n=got.size;
+    const band = n>=built.scoreLater ? 'later' : (n>=built.scoreEarly ? 'early' : null);
+    const named=built.cells.filter(c=>got.has(c.key)).map(c=>c.key).join(', ');
+    record(item.f, band, `Named ${n} of ${built.cells.length}${named?': '+named:''}`);
+    advance();
+  };
+  stage.appendChild(done);
+  stage.appendChild(hintBar(item.hint));
+}
+
+function rFlash(item){
+  stage.appendChild(el('div','prompt','Ready? Watch the sky!'));
+  const go=el('button','btn','Show me! 🌪️');
+  go.onclick=()=>{
+    clear(); showSay(false);
+    const box=el('div','flashbox');
+    for(let i=0;i<built.n;i++) box.appendChild(el('div','', tornado(60)));
+    stage.appendChild(box); say('Watch!');
+    setTimeout(()=>{
+      clear(); showSay(true);
+      stage.appendChild(el('div','prompt', item.say)); say(item.say);
+      const field=el('div','field');
+      built.choices.forEach(v=>{
+        const c=el('div','card num', String(v));
+        c.onclick=()=>{ record(item.f, v===built.n?item.band:null, `Flashed ${built.n}, said ${v}`); advance(); };
+        field.appendChild(c);
+      });
+      stage.appendChild(field);
+      const skip=el('button','btn ghost','No answer');
+      skip.onclick=()=>{ record(item.f,null,`Flashed ${built.n}, no answer`); advance(); };
+      stage.appendChild(skip);
+      stage.appendChild(hintBar('Tap the number he says.'));
+    }, 1300);
+  };
+  stage.appendChild(go);
+  stage.appendChild(hintBar(item.hint));
+}
+
+function rChoice(item){
+  stage.appendChild(el('div','prompt', item.say));
+  if(built.scene) stage.appendChild(el('div','', built.scene));
+  const field=el('div','field');
+  built.options.forEach(o=>{
+    const c=el('div','card '+(o.wide?'wide':'tall'));
+    c.innerHTML=o.html;
+    c.onclick=()=>{ record(item.f, o.correct?item.band:null,
+      (o.correct?'Correct':'Chose another')+(built.note?` (${built.note})`:'')); advance(); };
+    field.appendChild(c);
+  });
+  stage.appendChild(field);
+  const skip=el('button','btn ghost','No answer');
+  skip.onclick=()=>{ record(item.f,null,'No answer'+(built.note?` (${built.note})`:'')); advance(); };
+  stage.appendChild(skip);
+  stage.appendChild(hintBar(item.hint));
+}
+
+/* two questions, one picture — separates vocabulary from comparison */
+function rComparePair(item){
+  const order=shuffle(built.options.slice());
+  let pick1=null;
+  const finish=(pick2)=>{
+    const fewerOk=(pick1==='small'), moreOk=(pick2==='big');
+    let band=null, note='';
+    if(fewerOk&&moreOk){ band='later'; note=`Got "fewer" and "more" (${built.small} vs ${built.big})`; }
+    else if(fewerOk&&!moreOk){ band='early'; note='Got "fewer" but missed "more" — inconsistent, may have guessed'; }
+    else if(!fewerOk&&moreOk){ band='early';
+      note = pick1==='big'
+        ? 'VOCABULARY, NOT MATHS — chose the LARGER group for "fewer", then got "more" right. The classic less-means-more substitution; comparison is intact.'
+        : 'VOCABULARY, NOT MATHS — no answer for "fewer", but got "more" right on the same groups.'; }
+    else { band=null; note='Missed both — comparing close groups by counting not yet established. This IS a maths finding.'; }
+    record(item.f, band, note); advance();
+  };
+  const step=n=>{
+    const first=(n===1);
+    clear(); drawProgress(); showSay(true);
+    stage.appendChild(el('div','prompt', first?item.say:item.say2));
+    say(first?item.say:item.say2);
+    const field=el('div','field');
+    order.forEach(o=>{
+      const c=el('div','card tall'); c.innerHTML=o.html;
+      c.onclick=()=>{ if(first){pick1=o.key; step(2);} else finish(o.key); };
+      field.appendChild(c);
+    });
+    stage.appendChild(field);
+    const skip=el('button','btn ghost','No answer');
+    skip.onclick=()=>{ if(first){pick1='none'; step(2);} else finish('none'); };
+    stage.appendChild(skip);
+    stage.appendChild(hintBar(first?item.hint:item.hint2));
+  };
+  step(1);
+}
+
+/* the tornado visibly CARRIES A CAR AWAY (v1 finding B4) */
+function rWatchRemove(item){
+  stage.appendChild(el('div','prompt', item.say));
+  const scene=el('div','scene');
+  scene.innerHTML=`${carRow(built.n,built.color,52,'row')}<div id="twist">${tornado(76)}</div>`;
+  stage.appendChild(scene);
+  const go=el('button','btn','🌪️ Go!');
+  go.onclick=()=>{
+    go.disabled=true; go.style.opacity=.4;
+    const cars=scene.querySelectorAll('.carbox > *');
+    const victim=cars[cars.length-1];
+    const tw=$('twist');
+    tw.style.transition='transform .5s ease'; tw.style.transform='translateX(-70px) scale(1.15)';
+    setTimeout(()=>{ victim.classList.add('gone'); say('Whoosh!'); },420);
+    setTimeout(()=>{ victim.remove(); tw.style.transform='translateX(0) scale(1)'; ask(); },1150);
+  };
+  stage.appendChild(go);
+  stage.appendChild(hintBar(item.hint));
+
+  function ask(){
+    clear(); drawProgress(); showSay(true);
+    stage.appendChild(el('div','prompt', item.say2)); say(item.say2);
+    const s2=el('div','scene'); s2.innerHTML=carRow(built.left,built.color,48); stage.appendChild(s2);
+    const field=el('div','field');
+    built.options.forEach(o=>{
+      const c=el('div','card tall'); c.innerHTML=o.html;
+      c.onclick=()=>{ record(item.f,o.correct?item.band:null,(o.correct?'Correct':'Chose another')+` (${built.note})`); advance(); };
+      field.appendChild(c);
+    });
+    stage.appendChild(field);
+    const skip=el('button','btn ghost','No answer');
+    skip.onclick=()=>{ record(item.f,null,'No answer ('+built.note+')'); advance(); };
+    stage.appendChild(skip);
+    stage.appendChild(hintBar(item.hint2));
+  }
+}
+
+/* total is SEEN and counted before any of it is hidden (v1 finding B5) */
+function rWatchHide(item){
+  stage.appendChild(el('div','prompt', item.say));
+  const scene=el('div','scene');
+  scene.innerHTML=`<div class="total">🚗 <span>${built.total} cars</span></div>${carRow(built.total,built.color,50,'row')}`;
+  stage.appendChild(scene);
+  const go=el('button','btn','🏠 Park them!');
+  go.onclick=()=>{
+    go.disabled=true; go.style.opacity=.4;
+    const cars=scene.querySelectorAll('.carbox > *');
+    for(let i=0;i<built.into;i++) cars[i].classList.add('intogarage');
+    setTimeout(ask,900);
+  };
+  stage.appendChild(go);
+  stage.appendChild(hintBar(item.hint));
+
+  function ask(){
+    clear(); drawProgress(); showSay(true);
+    stage.appendChild(el('div','prompt', item.say2)); say(item.say2);
+    const s2=el('div','scene');
+    s2.innerHTML=`<div style="text-align:center"><div class="glabel">Open garage</div>${carGroup(built.into,built.color,40)}</div>
+                  <div style="text-align:center"><div class="glabel">Closed garage</div><div class="closed">?</div></div>`;
+    stage.appendChild(s2);
+    const field=el('div','field');
+    built.options.forEach(o=>{
+      const c=el('div','card tall'); c.innerHTML=o.html;
+      c.onclick=()=>{ record(item.f,o.correct?item.band:null,(o.correct?'Correct':'Chose another')+` (${built.note})`); advance(); };
+      field.appendChild(c);
+    });
+    stage.appendChild(field);
+    const skip=el('button','btn ghost','No answer');
+    skip.onclick=()=>{ record(item.f,null,'No answer ('+built.note+')'); advance(); };
+    stage.appendChild(skip);
+    stage.appendChild(hintBar(item.hint2));
+  }
+}
+
+function rSort(item){
+  stage.appendChild(el('div','prompt', item.say));
+  const pieces=shuffle(built.pieces.map((p,i)=>({...p,id:i})));
+  let sel=null, placed=0, correct=0;
+  const cards={};
+  const tray=el('div','field');
+  pieces.forEach(p=>{
+    const c=el('div','card obj'); c.innerHTML=p.html; cards[p.id]=c;
+    c.onclick=()=>{ Object.values(cards).forEach(x=>x.classList.remove('sel')); sel=p; c.classList.add('sel'); };
+    tray.appendChild(c);
+  });
+  stage.appendChild(tray);
+  const gw=el('div','garages');
+  built.bins.forEach(b=>{
+    const g=el('div','garage'); g.innerHTML=`<div class="glabel">${b.label}</div>`;
+    const bin=el('div','bin'); g.appendChild(bin);
+    g.onclick=()=>{
+      if(!sel) return;
+      cards[sel.id].classList.add('done'); cards[sel.id].classList.remove('sel');
+      bin.appendChild(el('div','', sel.html.replace(/width="\d+"/,'width="34"').replace(/height="[\d.]+"/,'height="20"')));
+      if(sel.bin===b.key) correct++;
+      placed++; sel=null;
+      if(placed===pieces.length) setTimeout(()=>{
+        const band = correct===pieces.length ? item.band : (correct>=pieces.length-1 ? 'early' : null);
+        record(item.f, band, `${correct} of ${pieces.length} placed correctly — ${built.note}`);
+        advance();
+      },350);
+    };
+    gw.appendChild(g);
+  });
+  stage.appendChild(gw);
+  stage.appendChild(hintBar(item.hint));
+}
+
+/* ============================================================
+   REPORT — this is where all the explanation lives
+   ============================================================ */
+function bandOf(f){ return results[f] ? results[f].band : undefined; }
+function bandChip(b){
+  if(b==='later') return '<span class="band later">Later · 4–5½</span>';
+  if(b==='early') return '<span class="band early">Early · 3–4½</span>';
+  if(b===null)    return '<span class="band notyet">Not yet</span>';
+  return '<span class="band skip">Not checked</span>';
+}
+function meanKey(b){ return b==='later'?'later':(b==='early'?'early':(b===null?'none':null)); }
+
+function showReport(){
+  clear(); showSay(false); crumb('Report'); activeSection=null; drawProgress();
+  stage.appendChild(el('div','prompt','What we found'));
+
+  const box=el('div','report');
+  let html=`<h2>Storm Chaser results <span style="font-size:13px;color:#8b95a4;font-weight:700">${VERSION} · ${new Date().toLocaleDateString()}</span></h2>
+    <div class="lede">Mapped to the California Preschool/Transitional Kindergarten Learning Foundations, Mathematics domain.
+    <b>Early</b> is typical for 3–4½. <b>Later</b> is typical for 4–5½ — where a child is heading by TK entry.
+    Nothing here is a score or a grade; each line is a placement plus what to do about it.</div>`;
+
+  Object.keys(GROUPS).forEach(gk=>{
+    const fs=Object.keys(F).filter(f=>F[f].group===gk);
+    if(!fs.length) return;
+    html+=`<div class="grouphead">${GROUPS[gk].label}</div>
+           <div class="lede" style="margin:-4px 0 10px">${GROUPS[gk].note}</div>`;
+    fs.forEach(f=>{
+      const info=F[f], r=results[f], b=r?r.band:undefined, mk=meanKey(b);
+      html+=`<div class="fcard">
+        <div class="fhead"><span class="fnum">${f.startsWith('V')?'vocab':f}</span>
+          <span class="fname">${info.name}</span>${bandChip(b)}</div>
+        <div class="frow"><b>What this measures</b>${info.measures}</div>
+        <div class="frow"><b>Why it is in the check</b>${info.why}</div>
+        ${r&&r.notes.length?`<div class="frow obs"><b>What he did</b>${r.notes.join('<br>')}</div>`:''}
+        ${mk?`<div class="frow mean"><b>What this means</b>${info.mean[mk]}</div>
+              <div class="frow"><b>Try next</b>${info.next[mk]||''}</div>`
+            :`<div class="frow"><b>What this means</b>Not measured yet — run the stop that covers it.</div>`}
+      </div>`;
+    });
+  });
+  box.innerHTML=html;
+  stage.appendChild(box);
+
+  const row=el('div','btnrow');
+  const copy=el('button','btn','📋 Copy');
+  copy.onclick=()=>{
+    const L=['Storm Chaser — Math Check', new Date().toLocaleString(),''];
+    Object.keys(GROUPS).forEach(gk=>{
+      L.push('== '+GROUPS[gk].label.toUpperCase()+' ==');
+      Object.keys(F).filter(f=>F[f].group===gk).forEach(f=>{
+        const r=results[f], b=r?r.band:undefined;
+        const bl = b===undefined?'Not checked':(b===null?'Not yet':(b==='early'?'Early (3-4.5)':'Later (4-5.5)'));
+        L.push(`${info_(f)}: ${bl}`);
+        if(r&&r.notes.length) r.notes.forEach(n=>L.push('    - '+n));
+        const mk=meanKey(b); if(mk) L.push('    MEANS: '+F[f].mean[mk]);
+      });
+      L.push('');
+    });
+    const t=L.join('\n');
+    if(navigator.clipboard) navigator.clipboard.writeText(t).then(()=>{copy.textContent='✓ Copied'; setTimeout(()=>copy.textContent='📋 Copy',1500);});
+    else window.prompt('Copy this:',t);
+  };
+  const back=el('button','btn alt','Back to the map'); back.onclick=home;
+  const wipe=el('button','btn ghost','Clear all results');
+  wipe.onclick=()=>{ if(confirm('Clear every result and start fresh?')){ results={}; doneSections={}; attempts={}; home(); } };
+  row.appendChild(copy); row.appendChild(back); row.appendChild(wipe);
+  stage.appendChild(row);
+}
+function info_(f){ return (f.startsWith('V')?'vocab':f)+' '+F[f].name; }
+
+/* ---- boot ---- */
+$('homeBtn').onclick=home;
+document.addEventListener('touchmove', e=>{ if(e.scale&&e.scale!==1) e.preventDefault(); },{passive:false});
+home();
+</script>
+</body>
+</html>
